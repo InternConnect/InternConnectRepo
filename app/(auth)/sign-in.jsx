@@ -3,16 +3,17 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useState, useRef } from 'react';
 import { images } from '../../constants';
 import { useRouter } from 'expo-router';
-import { heightPercentageToDP as hp,widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import Loading from '../../components/Loading'
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import Loading from '../../components/Loading';
 import CustomKeyBoard from '../../components/CustomKeyBoard';
 import { useAuth } from '../context/authContext';
-
+import { doc, getDoc } from "firebase/firestore"; // Importing Firestore functions
+import { databaseFB } from '../../FirebaseConfig'; // Ensure this import is correct
 
 const SignIn = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const {login} = useAuth();
+  const { login } = useAuth();
 
   const emailRef = useRef("");
   const passwordRef = useRef("");
@@ -23,11 +24,36 @@ const SignIn = () => {
       return;
     }
     setLoading(true);
+
+    // Perform the login
     const response = await login(emailRef.current, passwordRef.current);
     setLoading(false);
-    console.log('sign in response: ',response);
-    if(!response.success){
-      Alert.alert('sign in', response.msg);
+
+    if (!response.success) {
+      Alert.alert('Sign In', response.msg);
+      return;
+    }
+
+    // Fetch user data from Firestore after login
+    const userId = response.data.uid;
+    try {
+      const docRef = doc(databaseFB, 'users', userId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        const userType = userData.userType;
+
+        // Redirect based on userType
+        if (userType === 'job-seeker') {
+          router.push('/(tabs)/home'); // Job seeker home
+        } else if (userType === 'employer') {
+          router.push('/(employerTabs)/home'); // Employer home
+        }
+      } else {
+        Alert.alert('Sign In', 'User data not found');
+      }
+    } catch (error) {
+      Alert.alert('Sign In', 'Failed to fetch user data');
     }
   };
 
@@ -44,9 +70,9 @@ const SignIn = () => {
       <View className="mt-10">
         <Text className="text-black text-base">Email</Text>
         {/* Email field */}
-        <TextInput 
+        <TextInput
           onChangeText={value => emailRef.current = value}
-          style={styles.inputField} 
+          style={styles.inputField}
         />
 
         <View className="flex-row justify-between mt-6">
@@ -60,7 +86,7 @@ const SignIn = () => {
         <TextInput
           onChangeText={value => passwordRef.current = value}
           secureTextEntry
-          style={styles.inputField} 
+          style={styles.inputField}
         />
       </View>
 
@@ -68,8 +94,7 @@ const SignIn = () => {
       <View>
         {loading ? (
           <View className="flex-row justify-center">
-          <Loading size={hp(12)}/>
-
+            <Loading size={hp(12)} />
           </View>
         ) : (
           <TouchableOpacity onPress={handleLogin} style={styles.loginButton}>
@@ -98,7 +123,7 @@ const SignIn = () => {
           <Text style={styles.signUpLink}>Sign up</Text>
         </TouchableOpacity>
       </View>
-</CustomKeyBoard>
+    </CustomKeyBoard>
   );
 };
 
@@ -148,7 +173,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginTop: 16,
-    justifyContent: 'center', 
+    justifyContent: 'center',
   },
   googleIcon: {
     width: 24,
@@ -162,7 +187,7 @@ const styles = StyleSheet.create({
   signUpContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 'auto', 
+    marginTop: 'auto',
     marginBottom: 32,
   },
   signUpText: {

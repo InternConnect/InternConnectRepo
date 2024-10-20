@@ -1,7 +1,7 @@
 import { StyleSheet, View, Image } from 'react-native';
 import React from 'react';
 import { Tabs } from 'expo-router'; 
-
+import CustomHeader from '../../components/CustomHeader';
 import { icons } from '../../constants';
 
 const TabIcon = ({ icon, focused }) => {
@@ -36,44 +36,41 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="home"
           options={{
-            title: 'Home',
-            headerShown: false,
+            headerTitle: () => <CustomHeader title="Home" />, // Pass the title "Home"
+            headerShown: true,
             tabBarIcon: ({ focused }) => (
               <TabIcon icon={icons.home} focused={focused} />
             ),
           }}
         />
 
-        {/* second tab: search */}
         <Tabs.Screen
           name="search"
           options={{
-            title: 'Search',
-            headerShown: false,
+            headerTitle: () => <CustomHeader title="Search" />, // Pass the title "Search"
+            headerShown: true,
             tabBarIcon: ({ focused }) => (
               <TabIcon icon={icons.search} focused={focused} />
             ),
           }}
         />
 
-        {/* third tab: notifications */}
         <Tabs.Screen
           name="notifications"
           options={{
-            title: 'Notifications',
-            headerShown: false,
+            headerTitle: () => <CustomHeader title="Notifications" />, // Pass the title "Notifications"
+            headerShown: true,
             tabBarIcon: ({ focused }) => (
               <TabIcon icon={icons.notification} focused={focused} />
             ),
           }}
         />
 
-        {/* fourth tab: jobs */}
         <Tabs.Screen
           name="jobs"
           options={{
-            title: 'Jobs',
-            headerShown: false,
+            headerTitle: () => <CustomHeader title="Jobs" />, // Pass the title "Jobs"
+            headerShown: true,
             tabBarIcon: ({ focused }) => (
               <TabIcon icon={icons.suitcase} focused={focused} />
             ),

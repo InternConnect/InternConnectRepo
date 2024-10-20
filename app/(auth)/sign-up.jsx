@@ -28,8 +28,15 @@ const SignUp = () => {
     console.log('got result: ', response);
     if(!response.success){
       Alert.alert('sign up',response.msg);
+    }else {
+      // Redirect based on user type
+      if (userType === 'job-seeker') {
+        router.push('/(tabs)/home'); // Redirect to job seeker home
+      } else if (userType === 'employer') {
+        router.push('/(employerTabs)/employerhome'); // Redirect to employer home
+      }
     }
-   }
+   };
 
   return (
     <CustomKeyBoard>

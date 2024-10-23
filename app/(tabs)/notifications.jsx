@@ -22,10 +22,6 @@ const Jobs = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.subHeader}>
-        <Text style={styles.subHeaderText}>Jobs</Text>
-      </View>
-
       <FlatList
         data={jobsData}
         keyExtractor={(item) => item.id}
@@ -41,19 +37,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 16,
-  },
-  subHeader: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    justifyContent: 'center',  
-    alignItems: 'center',      
-    borderBottomWidth: 1,
-    borderColor: '#ddd',
-  },
-  subHeaderText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
   },
   jobList: {
     paddingVertical: 20,
@@ -91,4 +74,3 @@ const styles = StyleSheet.create({
 });
 
 export default Jobs;
-

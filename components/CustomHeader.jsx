@@ -2,35 +2,36 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '../app/context/authContext'; // Importing useAuth for logout functionality
+import { useRouter } from 'expo-router';
 
-const { height } = Dimensions.get('window'); 
+const { height } = Dimensions.get('window');
 
 const CustomHeader = ({ title }) => {
+  const router = useRouter();
+
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const slideAnim = useState(new Animated.Value(-250))[0]; // Sidebar width is 250px
 
   // Accessing the logout function and user data
-  const { logout } = useAuth(); 
+  const { logout } = useAuth();
 
   const openMenu = () => {
     setIsSidebarVisible(!isSidebarVisible);
-    if (!isSidebarVisible) {
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: false,
-      }).start();
-    } else {
-      Animated.timing(slideAnim, {
-        toValue: -250,
-        duration: 300,
-        useNativeDriver: false,
-      }).start();
-    }
+    Animated.timing(slideAnim, {
+      toValue: isSidebarVisible ? -250 : 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
   };
 
   const handleProfile = () => {
     console.log('Navigate to Profile');
+    router.push('/profile/profile'); //go to profile
+  };
+
+  const handlePost = () => {
+    console.log('Navigate to Profile');
+    router.push('/posts/posts'); //go to posts
   };
 
   // Logout logic using the logout function from useAuth
@@ -47,20 +48,19 @@ const CustomHeader = ({ title }) => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <MaterialIcons name="menu" size={24} color="#333" onPress={openMenu} />
+        <MaterialIcons testID="menuIcon" name="menu" size={24} color="#333" onPress={openMenu} />
         <Text style={styles.headerText}>{title}</Text>
-        <MaterialIcons name="add" size={24} color="#333" />
+        <MaterialIcons onPress={handlePost} name="add" size={24} color="#333" style={styles.addIcon} />
         <MaterialIcons name="mail" size={24} color="#333" />
-
       </View>
 
       {/* Sidebar */}
       {isSidebarVisible && (
         <Animated.View style={[styles.sidebar, { transform: [{ translateX: slideAnim }] }]}>
-          <TouchableOpacity onPress={handleProfile} style={styles.sidebarOption}>
+          <TouchableOpacity  testID="profileOption" onPress={handleProfile} style={styles.sidebarOption}>
             <Text style={styles.sidebarText}>Profile</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleLogout} style={styles.sidebarOption}>
+          <TouchableOpacity testID="logoutOption" onPress={handleLogout} style={styles.sidebarOption}>
             <Text style={styles.sidebarText}>Logout</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -74,7 +74,7 @@ export default CustomHeader;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5', 
+    backgroundColor: '#f5f5f5',
   },
   header: {
     width: '100%',
@@ -95,15 +95,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     flex: 1,
   },
+  addIcon: {
+    marginRight: 16, // Adjust this value for desired spacing
+  },
   sidebar: {
     position: 'absolute',
     left: 0,
-    top: 60, 
+    top: 60,
     width: 250,
-    height: height - 60, 
-    backgroundColor: '#fff', 
+    height: height - 60,
+    backgroundColor: '#fff',
     borderRightWidth: 1,
-    borderRightColor: '#D3D3D3', 
+    borderRightColor: '#D3D3D3',
     paddingVertical: 20,
   },
   sidebarOption: {
@@ -113,6 +116,6 @@ const styles = StyleSheet.create({
   },
   sidebarText: {
     fontSize: 18,
-    color: '#000', 
+    color: '#000',
   },
 });

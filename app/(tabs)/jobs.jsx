@@ -2,9 +2,9 @@ import React from 'react';
 import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 
 const jobsData = [
-  { id: '1', company: 'Company A', title: 'Software Engineer', location: 'Cape Town', avatar: 'https://via.placeholder.com/40' },
-  { id: '2', company: 'Company B', title: 'Data Scientist', location: 'Johannesburg', avatar: 'https://via.placeholder.com/40' },
-  { id: '3', company: 'Company C', title: 'Product Manager', location: 'Durban', avatar: 'https://via.placeholder.com/40' },
+  { id: '1', company: 'Company A', title: 'Software Engineer', location: 'Cape Town'},
+  { id: '2', company: 'Company B', title: 'Data Scientist', location: 'Johannesburg'},
+  { id: '3', company: 'Company C', title: 'Product Manager', location: 'Durban',},
 ];
 
 const Jobs = () => {
@@ -104,9 +104,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bookmarkPlaceholder: {
-    width: 24,  // Adjust as needed to match icon dimensions
+    width: 24,  
     height: 24,
-    backgroundColor: 'transparent', // Transparent to ensure it doesn't show
+    backgroundColor: 'transparent', 
   },
   companyName: {
     color: '#666',

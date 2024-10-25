@@ -10,7 +10,7 @@ const jobsData = [
 const Jobs = () => {
   const renderJobItem = ({ item }) => (
     <View style={styles.jobCard}>
-      {/* Company and Job Info */}
+      {/* Job Info */}
       <View style={styles.jobInfo}>
         <Text style={styles.companyName}>{item.company}</Text>
         <Text style={styles.jobTitle}>{item.title}</Text>
@@ -21,6 +21,9 @@ const Jobs = () => {
           <Text style={styles.easyApplyText}>Easy apply</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Bookmark Icon Placeholder */}
+      <View style={styles.bookmarkPlaceholder} />
     </View>
   );
 
@@ -65,6 +68,7 @@ const styles = StyleSheet.create({
     height: 40,
     backgroundColor: '#fff',
     marginBottom: 20,
+    marginTop: 16,
   },
   searchInput: {
     flex: 1,
@@ -79,7 +83,8 @@ const styles = StyleSheet.create({
   },
   searchButtonText: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 35,
+    lineHeight: 30,
   },
   jobList: {
     paddingVertical: 20,
@@ -97,6 +102,11 @@ const styles = StyleSheet.create({
   },
   jobInfo: {
     flex: 1,
+  },
+  bookmarkPlaceholder: {
+    width: 24,  // Adjust as needed to match icon dimensions
+    height: 24,
+    backgroundColor: 'transparent', // Transparent to ensure it doesn't show
   },
   companyName: {
     color: '#666',

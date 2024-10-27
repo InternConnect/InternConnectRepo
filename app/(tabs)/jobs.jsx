@@ -1,5 +1,6 @@
 import React from 'react'; 
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import {Feather} from '@expo/vector-icons';
 
 const jobsData = [
   { id: '1', company: 'Company A', title: 'Software Engineer', location: 'Cape Town'},
@@ -22,10 +23,13 @@ const Jobs = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Bookmark Icon Placeholder */}
-      <View style={styles.bookmarkPlaceholder} />
+      {/* Bookmark button */}
+      <TouchableOpacity style={styles.bookmarkButton}>
+        <Feather name="bookmark" size={24} color="green" />
+      </TouchableOpacity>
     </View>
   );
+
 
   return (
     <View style={styles.mainContainer}>
@@ -103,10 +107,9 @@ const styles = StyleSheet.create({
   jobInfo: {
     flex: 1,
   },
-  bookmarkPlaceholder: {
-    width: 24,  
-    height: 24,
-    backgroundColor: 'transparent', 
+  bookmarkButton: {
+    justifyContent: 'center',  
+    alignItems: 'center',
   },
   companyName: {
     color: '#666',

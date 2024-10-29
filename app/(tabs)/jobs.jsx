@@ -1,38 +1,54 @@
-import React from 'react'; 
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import {Feather} from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 
 const jobsData = [
-  { id: '1', company: 'Company A', title: 'Software Engineer', location: 'Cape Town'},
-  { id: '2', company: 'Company B', title: 'Data Scientist', location: 'Johannesburg'},
-  { id: '3', company: 'Company C', title: 'Product Manager', location: 'Durban',},
+  { id: '1', company: 'Company A', title: 'Software Engineer', location: 'Cape Town' },
+  { id: '2', company: 'Company B', title: 'Data Scientist', location: 'Johannesburg' },
+  { id: '3', company: 'Company C', title: 'Product Manager', location: 'Durban' },
+];
+
+const tipsData = [
+  'Tailor your resume for each job application.',
+  'Prepare for interviews by practicing common questions.',
+  'Network with professionals in your field.',
+  'Keep learning new skills relevant to your industry.',
 ];
 
 const Jobs = () => {
-  const renderJobItem = ({ item }) => (
-    <View style={styles.jobCard}>
-      {/* Job Info */}
+  const router = useRouter();
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTipIndex((prevIndex) => (prevIndex + 1) % tipsData.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleEasyApply = (jobId) => {
+    router.push(`/Jobs/jobDetails?id=${jobId}`);
+  };
+
+  const renderJobItem = (item) => (
+    <View key={item.id} style={styles.jobCard}>
       <View style={styles.jobInfo}>
         <Text style={styles.companyName}>{item.company}</Text>
         <Text style={styles.jobTitle}>{item.title}</Text>
         <Text style={styles.location}>{item.location}</Text>
-
-        {/* Easy Apply Button */}
-        <TouchableOpacity style={styles.easyApplyButton}>
+        <TouchableOpacity style={styles.easyApplyButton} onPress={() => handleEasyApply(item.id)}>
           <Text style={styles.easyApplyText}>Easy apply</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Bookmark button */}
       <TouchableOpacity style={styles.bookmarkButton}>
         <Feather name="bookmark" size={24} color="green" />
       </TouchableOpacity>
     </View>
   );
 
-
   return (
-    <View style={styles.mainContainer}>
+    <ScrollView style={styles.mainContainer}>
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <TextInput
@@ -45,14 +61,20 @@ const Jobs = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Job Listings */}
-      <FlatList
-        data={jobsData}
-        keyExtractor={(item) => item.id}
-        renderItem={renderJobItem}
-        contentContainerStyle={styles.jobList}
-      />
-    </View>
+      {/* Job Recommendations */}
+      <Text style={styles.sectionHeader}>Job Recommendations</Text>
+      {jobsData.map(renderJobItem)}
+
+      {/* Intern Tips */}
+      <View style={styles.tipsContainer}>
+        <Text style={styles.tipsHeader}>Tips for Interns / Entry-Level Job Seekers</Text>
+        <Text style={styles.tipText}>{tipsData[currentTipIndex]}</Text>
+      </View>
+
+      {/* Additional Job Recommendations */}
+      <Text style={styles.sectionHeader}>More Job Recommendations</Text>
+      {jobsData.map(renderJobItem)}
+    </ScrollView>
   );
 };
 
@@ -90,8 +112,10 @@ const styles = StyleSheet.create({
     fontSize: 35,
     lineHeight: 30,
   },
-  jobList: {
-    paddingVertical: 20,
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 10,
   },
   jobCard: {
     flexDirection: 'row',
@@ -108,7 +132,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bookmarkButton: {
-    justifyContent: 'center',  
+    justifyContent: 'center',
     alignItems: 'center',
   },
   companyName: {
@@ -134,6 +158,21 @@ const styles = StyleSheet.create({
   easyApplyText: {
     color: '#fff',
     fontSize: 12,
+  },
+  tipsContainer: {
+    marginVertical: 20,
+    padding: 15,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+  },
+  tipsHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  tipText: {
+    fontSize: 14,
+    color: '#333',
   },
 });
 

@@ -1,62 +1,81 @@
-import React from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, FlatList } from 'react-native';
-import { AntDesign, Feather } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import { databaseFB } from '../../FirebaseConfig'; // Import database instance
+import { collection, getDocs } from 'firebase/firestore';
+import { FontAwesome, Feather, AntDesign } from '@expo/vector-icons'; // For icons
 
 const Home = () => {
-  const renderItem = () => (
-    <View style={styles.postContainer}>
-      {/* Post Header - Profile Picture, Username, Post Time, and Follow Button */}
-      <View style={styles.postHeader}>
-        {/* Profile Picture */}
-        <Image source={{ uri: 'https://randomuser.me/api/portraits/women/1.jpg' }} style={styles.avatar} />
-        
-        {/* Username and Time */}
-        <View style={styles.postInfo}>
-          <Text style={styles.userName}>Username</Text>
-          <Text style={styles.postTime}>40 minutes ago</Text>
-        </View>
+  const [posts, setPosts] = useState([]);
 
-        {/* Follow/Following Button */}
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const postsCollection = collection(databaseFB, 'posts');
+        const postsSnapshot = await getDocs(postsCollection);
+        const postsList = postsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setPosts(postsList);
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  const renderPost = ({ item }) => (
+    <View style={styles.postContainer}>
+      {/* Header: Profile picture, username, and time */}
+      <View style={styles.header}>
+        <Image
+          source={{ uri: 'https://via.placeholder.com/50' }} // Replace with real profile image URL
+          style={styles.profileImage}
+        />
+        <View style={styles.headerText}>
+          <Text style={styles.userName}>{item.userId}</Text>
+          <Text style={styles.timestamp}>40 minutes ago</Text>
+        </View>
         <TouchableOpacity style={styles.followButton}>
-          <Text style={styles.followText}>follow</Text>
+          <Text style={styles.followButtonText}>Follow</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Post Text Content */}
-      <Text style={styles.postText}>This is a placeholder post text, lorem ipsum dolor sit amet...</Text>
+      {/* Post content */}
+      <Text style={styles.postContent}>{item.post}</Text>
 
-      {/* Post Image Placeholder */}
-      <Image source={{ uri: 'https://via.placeholder.com/300x200' }} style={styles.postImage} />
+      {/* Post image (if available) */}
+      {item.postImg && (
+        <Image source={{ uri: item.postImg }} style={styles.postImage} />
+      )}
 
-      {/* Post Actions - Like, Comment, Share */}
-      <View style={styles.postActions}>
-        {/* Like Button */}
-        <View style={styles.iconContainer}>
-          <AntDesign name="hearto" size={24} color="black" />
-          <Text style={styles.iconText}>28</Text>
+      {/* Footer: Like, Comment, Share icons */}
+      <View style={styles.footer}>
+        <View style={styles.iconGroup}>
+          <TouchableOpacity style={styles.icon}>
+            <AntDesign name="hearto" size={20} color="black" />
+            <Text style={styles.iconText}>28</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.icon}>
+            <FontAwesome name="comment-o" size={20} color="black" />
+            <Text style={styles.iconText}>15</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* Comment Button */}
-        <View style={styles.iconContainer}>
-          <Feather name="message-circle" size={24} color="black" />
-          <Text style={styles.iconText}>15</Text>
-        </View>
-
-        {/* Share Button */}
-        <TouchableOpacity>
-          <Feather name="share" size={24} color="black" />
-        </TouchableOpacity>
+        <Feather name="share-2" size={20} color="black" />
       </View>
     </View>
   );
 
   return (
-    <FlatList
-      data={[{}, {}, {}]} // Placeholder for multiple posts
-      renderItem={renderItem}
-      keyExtractor={(_, index) => index.toString()}
-      contentContainerStyle={styles.container}
-    />
+    <View style={styles.container}>
+      <FlatList
+        data={posts}
+        renderItem={renderPost}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      />
+    </View>
   );
 };
 
@@ -64,72 +83,77 @@ export default Home;
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    padding: 20,
     backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingBottom: 16,
   },
   postContainer: {
+    padding: 15,
+    marginVertical: 10,
+    borderRadius: 8,
     backgroundColor: '#fff',
-    padding: 16,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
   },
-  postHeader: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
   },
-  avatar: {
+  profileImage: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    marginRight: 10,
   },
-  postInfo: {
+  headerText: {
     flex: 1,
+    marginLeft: 10,
   },
   userName: {
-    fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    fontSize: 16,
   },
-  postTime: {
+  timestamp: {
+    color: '#888',
     fontSize: 12,
-    color: '#aaa',
   },
   followButton: {
     backgroundColor: '#34c759',
-    paddingHorizontal: 16,
-    paddingVertical: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     borderRadius: 20,
   },
-  followText: {
+  followButtonText: {
     color: '#fff',
+    fontWeight: 'bold',
   },
-  postText: {
-    fontSize: 14,
-    color: '#333',
+  postContent: {
+    fontSize: 16,
     marginBottom: 10,
   },
   postImage: {
     width: '100%',
     height: 200,
-    borderRadius: 10,
+    borderRadius: 8,
     marginBottom: 10,
   },
-  postActions: {
+  footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  iconContainer: {
+  iconGroup: {
+    flexDirection: 'row',
+  },
+  icon: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: 15,
   },
   iconText: {
-    marginLeft: 6,
-    fontSize: 14,
-    color: '#333',
+    marginLeft: 5,
   },
 });

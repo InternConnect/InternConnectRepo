@@ -1,8 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth, databaseFB } from "../../FirebaseConfig";
-import { doc, getDoc, getDocs, setDoc } from "firebase/firestore";
-import { get } from "firebase/database";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 // Create the context
 export const AuthContext = createContext();
@@ -17,8 +16,7 @@ export const AuthContextProvider = ({ children }) => {
     const unsub = onAuthStateChanged(auth, (user) => {
       if (user) {
         setIsAuthenticated(true);
-        setUser(user);
-        updateUserData(user.uid)
+        updateUserData(user.uid);
       } else {
         setIsAuthenticated(false);
         setUser(null);
@@ -27,14 +25,17 @@ export const AuthContextProvider = ({ children }) => {
     return unsub;
   }, []);
 
-  const updateUserData= async (userId)=>{
-    const docRef = doc(databaseFB,'users',userId);
+  const updateUserData = async (userId) => {
+    const docRef = doc(databaseFB, 'users', userId);
     const docSnap = await getDoc(docRef);
-    if(docSnap.exists()){
-      let  data = docSnap.data();
-      setUser({...user,username:data.username, userType: data.userType, userId: data.userId})
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      setUser({ ...user, username: data.username, userType: data.userType, userId: data.userId });
+    } else {
+      console.log('No such document in users collection!');
     }
-  }
+  };
+
   // Login function
   const login = async (email, password) => {
     try {
@@ -47,8 +48,6 @@ export const AuthContextProvider = ({ children }) => {
       if (msg.includes('auth/wrong-password')) msg = 'Wrong password';
       if (msg.includes('auth/invalid-email')) msg = 'Invalid email';
       if (msg.includes('auth/user-not-found')) msg = 'User not found';
-      if (msg.includes('auth/invalid-credential')) msg = 'invalid email or password';
-
       return { success: false, msg };
     }
   };
@@ -92,11 +91,5 @@ export const AuthContextProvider = ({ children }) => {
   );
 };
 
-// Custom hook for consuming auth context
-export const useAuth = () => {
-  const value = useContext(AuthContext);
-  if (!value) {
-    throw new Error("useAuth must be wrapped inside AuthContextProvider");
-  }
-  return value;
-};
+// Custom hook for using the AuthContext
+export const useAuth = () => useContext(AuthContext);

@@ -1,14 +1,54 @@
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView } from 'react-native';
-import React, { useState } from 'react'; // Import useState
-import { AntDesign, Feather } from '@expo/vector-icons';
+import { doc, getDoc } from 'firebase/firestore';
+import { usersRef } from '../../FirebaseConfig';
+import { useAuth } from '../context/authContext'; 
 import { useRouter } from 'expo-router';
-import ProfileHeader from '../../components/ProfileHeader'; // Import the custom header
+import ProfileHeader from '../../components/ProfileHeader';
+import { AntDesign, Feather } from '@expo/vector-icons';
 
 const Profile = () => {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('posts'); // State for active tab
+  const { user } = useAuth();
+  const userId = user?.userId;
+  const [activeTab, setActiveTab] = useState('posts');
+  const [profileData, setProfileData] = useState({
+    fullName: 'Sarah Lorem',
+    bio: 'Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit.',
+    education: 'Eduvos',
+    role: 'Software Engineer',
+    profileImage: 'https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1',
+  });
 
-  // Static post data
+  // Fetch updated profile data on component mount
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchProfileData = async () => {
+      try {
+        const docRef = doc(usersRef, userId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setProfileData(docSnap.data());
+        } else {
+          console.log('No such document!');
+        }
+      } catch (error) {
+        console.error('Error fetching profile data:', error);
+      }
+    };
+
+    fetchProfileData();
+  }, [userId]);
+
+  const handleEditProfile = () => {
+    router.push('/profile/editProfile');
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
   const posts = [
     {
       id: '1',
@@ -39,12 +79,6 @@ const Profile = () => {
     },
   ];
 
-  const handleEditProfile = () => {
-    console.log('Navigate to edit Profile');
-    router.push('/profile/editProfile'); // Go to edit profile
-  };
-
-  // Render each post
   const renderPost = (post) => (
     <View key={post.id} style={styles.post}>
       <View style={styles.postHeader}>
@@ -71,66 +105,44 @@ const Profile = () => {
     </View>
   );
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab); // Update the active tab
-  };
-
   return (
     <ScrollView style={styles.container}>
-      {/* Profile Header */}
       <ProfileHeader title="Profile" />
 
-      {/* Profile Info Section */}
       <View style={styles.profileInfo}>
-        <Image
-          source={{ uri: 'https://randomuser.me/api/portraits/women/1.jpg' }}
-          style={styles.profileImage}
-        />
+        <Image source={{ uri: profileData.profileImage }} style={styles.profileImage} />
         <View style={styles.userInfo}>
-          <Text style={styles.userName}>Sarah Lorem</Text>
-          <Text style={styles.userDetails}>Desired Role: Software Engineer</Text>
-          <Text style={styles.userDetails}>Location: Cape Town</Text>
-          <Text style={styles.userDetails}>Education/experience: Eduvos</Text>
-          <Text style={styles.userDetails}>Connections: 102</Text>
+          <Text style={styles.userName}>{profileData.fullName}</Text>
+          <Text style={styles.userDetails}>Desired Role: {profileData.role}</Text>
+          <Text style={styles.userDetails}>Education/experience: {profileData.education}</Text>
         </View>
       </View>
 
-      {/* Bio Section */}
       <View style={styles.bioSection}>
         <Text style={styles.bioTitle}>BIO</Text>
-        <Text style={styles.bioText}>
-          Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit. 
-          Nullam Vehicula Velit Nulla, Vitae Rutrum Felis.
-        </Text>
+        <Text style={styles.bioText}>{profileData.bio}</Text>
       </View>
 
       <TouchableOpacity onPress={handleEditProfile} style={styles.editProfileButton}>
         <Text style={styles.editProfileText}>Edit Profile</Text>
       </TouchableOpacity>
 
-      {/* Posts and Saved Tabs */}
       <View style={styles.tabs}>
         <TouchableOpacity 
           style={activeTab === 'posts' ? styles.activeTab : styles.inactiveTab} 
           onPress={() => handleTabChange('posts')}
         >
-          <Text style={activeTab === 'posts' ? styles.tabTextActive : styles.tabTextInactive}>
-            Posts
-          </Text>
+          <Text style={activeTab === 'posts' ? styles.tabTextActive : styles.tabTextInactive}>Posts</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={activeTab === 'saved' ? styles.activeTab : styles.inactiveTab} 
           onPress={() => handleTabChange('saved')}
         >
-          <Text style={activeTab === 'saved' ? styles.tabTextActive : styles.tabTextInactive}>
-            Saved
-          </Text>
+          <Text style={activeTab === 'saved' ? styles.tabTextActive : styles.tabTextInactive}>Saved</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Post Section */}
       {activeTab === 'posts' && posts.map((post) => renderPost(post))}
-      {/* You can render saved posts or content here when 'saved' tab is active */}
     </ScrollView>
   );
 };

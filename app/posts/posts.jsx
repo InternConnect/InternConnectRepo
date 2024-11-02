@@ -4,7 +4,7 @@ import { AntDesign, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/authContext';
 import * as ImagePicker from 'expo-image-picker';
-import { getFirestore, collection, addDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, serverTimestamp} from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const AddPost = () => {
@@ -30,12 +30,14 @@ const AddPost = () => {
     const db = getFirestore();
     try {
       await addDoc(collection(db, 'posts'), {
-        userId: user.userId, // Ensure user.userId is defined
+        userId: user.userId, 
         post: post,
         postImg: imageUrl,
         postTime: new Date(),
         likes: [],
         comments: [],
+        timestamp: serverTimestamp(), // Set server timestamp
+
       });
       console.log('Post Added');
       Alert.alert('Post published', 'Your Post has been published');

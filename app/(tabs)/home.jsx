@@ -1,22 +1,56 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
-import { databaseFB } from '../../FirebaseConfig'; // Import database instance
-import { collection, getDocs } from 'firebase/firestore';
-import { FontAwesome, Feather, AntDesign } from '@expo/vector-icons'; // For icons
+import React, { useEffect, useState } from 'react'; 
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Modal, TextInput } from 'react-native';
+import { databaseFB } from '../../FirebaseConfig';
+import { collection, getDocs, doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { FontAwesome, Feather, AntDesign } from '@expo/vector-icons';
+import { useAuth } from '../context/authContext'; // Get the logged-in user's information
+import { formatDistanceToNow } from 'date-fns';
+
 
 const Home = () => {
-  const [posts, setPosts] = useState([]);
+  const { user } = useAuth(); // Get user data from auth context
+  const currentUserId = user?.userId; // Set the logged-in user's ID
 
+  // All the states we need to track
+  const [posts, setPosts] = useState([]); // Keeps track of posts
+  const [users, setUsers] = useState({}); // Keeps track of user info like names
+  const [selectedPost, setSelectedPost] = useState(null); // Keeps track of the selected post for comments
+  const [isCommentVisible, setCommentVisible] = useState(false); // To show or hide comments
+  const [newComment, setNewComment] = useState(''); // Stores new comments typed by the user
+  const [likedPosts, setLikedPosts] = useState(new Set()); // Tracks liked posts
+
+  // useEffect runs only once to fetch posts and user details
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const postsCollection = collection(databaseFB, 'posts');
-        const postsSnapshot = await getDocs(postsCollection);
+        const postsCollection = collection(databaseFB, 'posts'); // Get the posts collection from Firestore
+        const postsSnapshot = await getDocs(postsCollection); // Fetch all posts
         const postsList = postsSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
+                  timestamp: data.timestamp?.toDate(), // Convert Firestore timestamp to JS Date
+
         }));
-        setPosts(postsList);
+        setPosts(postsList); // Set posts to our state
+
+        // Now fetch user details for each post
+        const userPromises = postsList.map(async (post) => {
+          const userDoc = await getDoc(doc(databaseFB, 'users', post.userId)); // Fetch user details by userId
+          const userData = userDoc.data();
+          return {
+            id: post.userId,
+            username: userData?.fullName,
+            profilePicture: userData?.profileImage,
+          };
+        });
+
+        // Store user details in a dictionary for quick access
+        const usersList = await Promise.all(userPromises);
+        const usersData = usersList.reduce((acc, user) => {
+          acc[user.id] = { username: user.username, profilePicture: user.profilePicture };
+          return acc;
+        }, {});
+        setUsers(usersData); // Save all user data to state
       } catch (error) {
         console.error('Error fetching posts:', error);
       }
@@ -25,45 +59,116 @@ const Home = () => {
     fetchPosts();
   }, []);
 
+  // Function to handle likes on a post
+  const handleLike = async (postId) => {
+    const postRef = doc(databaseFB, 'posts', postId); // Reference to the post
+    try {
+      const postSnap = await getDoc(postRef);
+      const post = postSnap.data();
+      const likesArray = post?.likes || []; // Get the likes array from the post
+
+      if (likesArray.includes(currentUserId)) {
+        await updateDoc(postRef, {
+          likes: arrayRemove(currentUserId), // Remove like if already liked
+        });
+        setLikedPosts((prev) => {
+          const updated = new Set(prev);
+          updated.delete(postId);
+          return updated;
+        });
+      } else {
+        await updateDoc(postRef, {
+          likes: arrayUnion(currentUserId), // Add like if not already liked
+        });
+        setLikedPosts((prev) => new Set(prev).add(postId));
+      }
+
+      // Update the posts state to reflect the new like count
+      const updatedPosts = posts.map((p) =>
+        p.id === postId ? { ...p, likes: likesArray.includes(currentUserId) ? likesArray.filter(id => id !== currentUserId) : [...likesArray, currentUserId] } : p
+      );
+      setPosts(updatedPosts);
+    } catch (error) {
+      console.error('Error updating likes:', error);
+    }
+  };
+
+  // Function to open the comments modal
+  const openComments = (post) => {
+    setSelectedPost(post);
+    setCommentVisible(true);
+  };
+
+  // Function to add a new comment to a post
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+
+    const postRef = doc(databaseFB, 'posts', selectedPost.id);
+    await updateDoc(postRef, {
+      comments: arrayUnion({ text: newComment, userId: currentUserId, replies: [] }), // Add comment with current user's ID
+    });
+
+    const updatedPost = await getDoc(postRef);
+    const updatedPosts = [...posts];
+    const postIndex = updatedPosts.findIndex((p) => p.id === selectedPost.id);
+    if (postIndex !== -1) {
+      updatedPosts[postIndex] = updatedPost.data();
+      setPosts(updatedPosts);
+    }
+
+    setNewComment('');
+    setCommentVisible(false);
+  };
+
+  // Function to render each post in the list
   const renderPost = ({ item }) => (
     <View style={styles.postContainer}>
-      {/* Header: Profile picture, username, and time */}
       <View style={styles.header}>
         <Image
-          source={{ uri: 'https://via.placeholder.com/50' }} // Replace with real profile image URL
+          source={{ uri: users[item.userId]?.profilePicture || 'https://via.placeholder.com/50' }}
           style={styles.profileImage}
         />
         <View style={styles.headerText}>
-          <Text style={styles.userName}>{item.userId}</Text>
-          <Text style={styles.timestamp}>40 minutes ago</Text>
+          <Text style={styles.userName}>{users[item.userId]?.username || 'Unknown User'}</Text>
+          {item.timestamp ? formatDistanceToNow(item.timestamp, { addSuffix: true }) : 'Just now'}
         </View>
         <TouchableOpacity style={styles.followButton}>
           <Text style={styles.followButtonText}>Follow</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Post content */}
       <Text style={styles.postContent}>{item.post}</Text>
 
-      {/* Post image (if available) */}
       {item.postImg && (
         <Image source={{ uri: item.postImg }} style={styles.postImage} />
       )}
 
-      {/* Footer: Like, Comment, Share icons */}
       <View style={styles.footer}>
         <View style={styles.iconGroup}>
-          <TouchableOpacity style={styles.icon}>
-            <AntDesign name="hearto" size={20} color="black" />
-            <Text style={styles.iconText}>28</Text>
+          <TouchableOpacity style={styles.icon} onPress={() => handleLike(item.id)}>
+            <AntDesign name={likedPosts.has(item.id) ? 'heart' : 'hearto'} size={20} color={likedPosts.has(item.id) ? 'green' : 'black'} />
+            <Text style={styles.iconText}>{item.likes?.length || 0}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.icon}>
+          <TouchableOpacity style={styles.icon} onPress={() => openComments(item)}>
             <FontAwesome name="comment-o" size={20} color="black" />
-            <Text style={styles.iconText}>15</Text>
+            <Text style={styles.iconText}>{item.comments?.length || 0}</Text>
           </TouchableOpacity>
         </View>
         <Feather name="share-2" size={20} color="black" />
       </View>
+    </View>
+  );
+
+  // Function to render each comment in the comments section
+  const renderComment = ({ item }) => (
+    <View style={styles.commentContainer}>
+      <Text style={styles.commentText}>
+        <Text style={styles.commentUsername}>{users[item.userId]?.username || 'Unknown User'}: </Text>
+        {item.text}
+      </Text>
+      <TouchableOpacity>
+        <Text style={styles.replyText}>Reply</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -75,13 +180,96 @@ const Home = () => {
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 20 }}
       />
+
+      <Modal visible={isCommentVisible} animationType="slide" onRequestClose={() => setCommentVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setCommentVisible(false)}>
+              <Text style={styles.closeButton}>Close</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Comments</Text>
+          </View>
+
+          {selectedPost && (
+            <FlatList
+              data={selectedPost.comments || []}
+              keyExtractor={(item, index) => `${selectedPost.id}-comment-${index}`}
+              renderItem={renderComment}
+            />
+          )}
+
+          <TextInput
+            style={styles.commentInput}
+            placeholder="Add a comment..."
+            value={newComment}
+            onChangeText={setNewComment}
+          />
+          <TouchableOpacity onPress={handleAddComment} style={styles.addCommentButton}>
+            <Text style={styles.addCommentText}>Post</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
 
 export default Home;
 
+
+
 const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#fff',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  closeButton: {
+    color: '#34c759',
+    fontSize: 16,
+  },
+  commentContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  commentText: {
+    fontSize: 16,
+  },
+  commentUsername: {
+    fontWeight: 'bold', // Make username bold
+  },
+  replyText: {
+    color: '#34c759',
+    fontSize: 14,
+  },
+  commentInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    padding: 10,
+    marginVertical: 10,
+  },
+  addCommentButton: {
+    backgroundColor: '#34c759',
+    padding: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  addCommentText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
   container: {
     flex: 1,
     padding: 20,
@@ -147,6 +335,7 @@ const styles = StyleSheet.create({
   },
   iconGroup: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
   icon: {
     flexDirection: 'row',

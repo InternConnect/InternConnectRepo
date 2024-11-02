@@ -13,10 +13,10 @@ const Profile = () => {
   const userId = user?.userId;
   const [activeTab, setActiveTab] = useState('posts');
   const [profileData, setProfileData] = useState({
-    fullName: 'Sarah Lorem',
-    bio: 'Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit.',
-    education: 'Eduvos',
-    role: 'Software Engineer',
+    fullName: 'username',
+    bio: 'Tell Us Your Story.',
+    education: 'null',
+    role: 'null',
     profileImage: 'https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1',
   });
 
@@ -115,6 +115,8 @@ const Profile = () => {
           <Text style={styles.userName}>{profileData.fullName}</Text>
           <Text style={styles.userDetails}>Desired Role: {profileData.role}</Text>
           <Text style={styles.userDetails}>Education/experience: {profileData.education}</Text>
+          <Text style={styles.userDetails}>location: {profileData.location}</Text>
+
         </View>
       </View>
 

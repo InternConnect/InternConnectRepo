@@ -18,7 +18,8 @@ const EditProfile = () => {
     bio: '',
     education: '',
     role: '',
-    profileImage: 'https://randomuser.me/api/portraits/women/1.jpg',
+    location: '',
+    profileImage: 'https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1',
   });
 
   useEffect(() => {
@@ -121,6 +122,13 @@ const EditProfile = () => {
           placeholder="Enter desired role"
           value={profileData.role}
           onChangeText={(text) => handleChange('role', text)}
+        />
+        <Text style={styles.label}>location</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your location"
+          value={profileData.location}
+          onChangeText={(text) => handleChange('location', text)}
         />
       </View>
 

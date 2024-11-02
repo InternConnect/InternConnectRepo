@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 
 const jobsData = [
   { id: '1', company: 'Company A', title: 'Software Engineer', location: 'Cape Town' },
@@ -50,16 +50,18 @@ const Jobs = () => {
   return (
     <ScrollView style={styles.mainContainer}>
       {/* Search Bar */}
+      <View style={styles.container}>
       <View style={styles.searchContainer}>
         <TextInput
-          style={styles.searchInput}
+          style={styles.input}
           placeholder="Search here"
-          placeholderTextColor="#999"
+          placeholderTextColor="#A9A9A9"
         />
         <TouchableOpacity style={styles.searchButton}>
-          <Text style={styles.searchButtonText}>→</Text>
+          <Ionicons name="arrow-forward" size={20} color="white" />
         </TouchableOpacity>
       </View>
+    </View>
 
       {/* Job Recommendations */}
       <Text style={styles.sectionHeader}>Job Recommendations</Text>
@@ -83,35 +85,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 16,
+    paddingTop: 20, 
+
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 25,
-    paddingLeft: 15,
-    height: 40,
-    backgroundColor: '#fff',
-    marginBottom: 20,
-    marginTop: 16,
-  },
-  searchInput: {
-    flex: 1,
-  },
-  searchButton: {
-    backgroundColor: '#2CB67D',
-    borderRadius: 25,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  searchButtonText: {
-    color: '#fff',
-    fontSize: 35,
-    lineHeight: 30,
-  },
+ 
   sectionHeader: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -173,6 +150,26 @@ const styles = StyleSheet.create({
   tipText: {
     fontSize: 14,
     color: '#333',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: '#D3D3D3',
+    borderWidth: 1,
+    borderRadius: 50,
+    marginHorizontal: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginBottom: 10, 
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+  },
+  searchButton: {
+    backgroundColor: '#28a745', // Green color
+    borderRadius: 50,
+    padding: 10,
   },
 });
 

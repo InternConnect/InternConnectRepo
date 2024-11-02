@@ -33,7 +33,7 @@ const SignUp = () => {
       if (userType === 'job-seeker') {
         router.push('/(tabs)/home'); // Redirect to job seeker home
       } else if (userType === 'employer') {
-        router.push('/(employerTabs)/employerhome'); // Redirect to employer home
+        router.push('/(employerTabs)/home'); // Redirect to employer home
       }
     }
    };

@@ -36,7 +36,6 @@ const AddPost = () => {
         postTime: new Date(),
         likes: [],
         comments: [],
-        timestamp: serverTimestamp(), // Set server timestamp
 
       });
       console.log('Post Added');

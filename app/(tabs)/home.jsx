@@ -6,12 +6,10 @@ import { FontAwesome, Feather, AntDesign } from '@expo/vector-icons';
 import { useAuth } from '../context/authContext'; // Get the logged-in user's information
 import { formatDistanceToNow } from 'date-fns';
 
-
 const Home = () => {
   const { user } = useAuth(); // Get user data from auth context
   const currentUserId = user?.userId; // Set the logged-in user's ID
 
-  // All the states we need to track
   const [posts, setPosts] = useState([]); // Keeps track of posts
   const [users, setUsers] = useState({}); // Keeps track of user info like names
   const [selectedPost, setSelectedPost] = useState(null); // Keeps track of the selected post for comments
@@ -19,23 +17,23 @@ const Home = () => {
   const [newComment, setNewComment] = useState(''); // Stores new comments typed by the user
   const [likedPosts, setLikedPosts] = useState(new Set()); // Tracks liked posts
 
-  // useEffect runs only once to fetch posts and user details
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         const postsCollection = collection(databaseFB, 'posts'); // Get the posts collection from Firestore
         const postsSnapshot = await getDocs(postsCollection); // Fetch all posts
-        const postsList = postsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-                  timestamp: data.timestamp?.toDate(), // Convert Firestore timestamp to JS Date
-
-        }));
+        const postsList = postsSnapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+          };
+        });
         setPosts(postsList); // Set posts to our state
 
-        // Now fetch user details for each post
+        // Fetch user details for each post
         const userPromises = postsList.map(async (post) => {
-          const userDoc = await getDoc(doc(databaseFB, 'users', post.userId)); // Fetch user details by userId
+          const userDoc = await getDoc(doc(databaseFB, 'users', post.userId));
           const userData = userDoc.data();
           return {
             id: post.userId,
@@ -44,7 +42,6 @@ const Home = () => {
           };
         });
 
-        // Store user details in a dictionary for quick access
         const usersList = await Promise.all(userPromises);
         const usersData = usersList.reduce((acc, user) => {
           acc[user.id] = { username: user.username, profilePicture: user.profilePicture };
@@ -59,17 +56,16 @@ const Home = () => {
     fetchPosts();
   }, []);
 
-  // Function to handle likes on a post
   const handleLike = async (postId) => {
-    const postRef = doc(databaseFB, 'posts', postId); // Reference to the post
+    const postRef = doc(databaseFB, 'posts', postId);
     try {
       const postSnap = await getDoc(postRef);
       const post = postSnap.data();
-      const likesArray = post?.likes || []; // Get the likes array from the post
+      const likesArray = post?.likes || [];
 
       if (likesArray.includes(currentUserId)) {
         await updateDoc(postRef, {
-          likes: arrayRemove(currentUserId), // Remove like if already liked
+          likes: arrayRemove(currentUserId),
         });
         setLikedPosts((prev) => {
           const updated = new Set(prev);
@@ -78,14 +74,20 @@ const Home = () => {
         });
       } else {
         await updateDoc(postRef, {
-          likes: arrayUnion(currentUserId), // Add like if not already liked
+          likes: arrayUnion(currentUserId),
         });
         setLikedPosts((prev) => new Set(prev).add(postId));
       }
 
-      // Update the posts state to reflect the new like count
       const updatedPosts = posts.map((p) =>
-        p.id === postId ? { ...p, likes: likesArray.includes(currentUserId) ? likesArray.filter(id => id !== currentUserId) : [...likesArray, currentUserId] } : p
+        p.id === postId
+          ? {
+              ...p,
+              likes: likesArray.includes(currentUserId)
+                ? likesArray.filter((id) => id !== currentUserId)
+                : [...likesArray, currentUserId],
+            }
+          : p
       );
       setPosts(updatedPosts);
     } catch (error) {
@@ -93,19 +95,17 @@ const Home = () => {
     }
   };
 
-  // Function to open the comments modal
   const openComments = (post) => {
     setSelectedPost(post);
     setCommentVisible(true);
   };
 
-  // Function to add a new comment to a post
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
     const postRef = doc(databaseFB, 'posts', selectedPost.id);
     await updateDoc(postRef, {
-      comments: arrayUnion({ text: newComment, userId: currentUserId, replies: [] }), // Add comment with current user's ID
+      comments: arrayUnion({ text: newComment, userId: currentUserId, replies: [] }),
     });
 
     const updatedPost = await getDoc(postRef);
@@ -120,7 +120,6 @@ const Home = () => {
     setCommentVisible(false);
   };
 
-  // Function to render each post in the list
   const renderPost = ({ item }) => (
     <View style={styles.postContainer}>
       <View style={styles.header}>
@@ -130,7 +129,7 @@ const Home = () => {
         />
         <View style={styles.headerText}>
           <Text style={styles.userName}>{users[item.userId]?.username || 'Unknown User'}</Text>
-          {item.timestamp ? formatDistanceToNow(item.timestamp, { addSuffix: true }) : 'Just now'}
+          <Text style={styles.timestamp}>just now</Text>
         </View>
         <TouchableOpacity style={styles.followButton}>
           <Text style={styles.followButtonText}>Follow</Text>
@@ -139,9 +138,7 @@ const Home = () => {
 
       <Text style={styles.postContent}>{item.post}</Text>
 
-      {item.postImg && (
-        <Image source={{ uri: item.postImg }} style={styles.postImage} />
-      )}
+      {item.postImg && <Image source={{ uri: item.postImg }} style={styles.postImage} />}
 
       <View style={styles.footer}>
         <View style={styles.iconGroup}>
@@ -159,7 +156,6 @@ const Home = () => {
     </View>
   );
 
-  // Function to render each comment in the comments section
   const renderComment = ({ item }) => (
     <View style={styles.commentContainer}>
       <Text style={styles.commentText}>
@@ -177,7 +173,7 @@ const Home = () => {
       <FlatList
         data={posts}
         renderItem={renderPost}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id} 
         contentContainerStyle={{ paddingBottom: 20 }}
       />
 

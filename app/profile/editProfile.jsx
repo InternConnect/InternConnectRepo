@@ -1,10 +1,10 @@
 // app/profile/editProfile.jsx
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Image, TextInput, TouchableOpacity, Alert } from 'react-native';
-import * as ImagePicker from 'expo-image-picker'; // Import Image Picker
+import { StyleSheet, Text, View, Image, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { databaseFB, usersRef } from '../../FirebaseConfig';
+import { usersRef } from '../../FirebaseConfig';
 import { useAuth } from '../context/authContext'; 
 import ProfileHeader from '../../components/ProfileHeader';
 
@@ -20,7 +20,10 @@ const EditProfile = () => {
     role: '',
     location: '',
     profileImage: 'https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1',
+    skills: [],
   });
+
+  const [skillInput, setSkillInput] = useState('');
 
   useEffect(() => {
     if (!userId) return;
@@ -59,20 +62,28 @@ const EditProfile = () => {
     }
   };
 
+  const addSkill = () => {
+    if (skillInput.trim()) {
+      setProfileData((prevData) => ({
+        ...prevData,
+        skills: [...(prevData.skills || []), skillInput.trim()],
+      }));
+      setSkillInput('');
+    }
+  };
+
   const pickImage = async () => {
-    // Request permission to access the media library
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to select an image.');
       return;
     }
 
-    // Open the image picker
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1], // Make image square (optional)
-      quality: 1, // Full quality image
+      aspect: [1, 1],
+      quality: 1,
     });
 
     if (!result.canceled) {
@@ -81,8 +92,8 @@ const EditProfile = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <ProfileHeader title="edit profile" />
+    <ScrollView contentContainerStyle={styles.container}>
+      <ProfileHeader title="Edit Profile" />
 
       <View style={styles.imageSection}>
         <Image source={{ uri: profileData.profileImage }} style={styles.profileImage} />
@@ -123,7 +134,8 @@ const EditProfile = () => {
           value={profileData.role}
           onChangeText={(text) => handleChange('role', text)}
         />
-        <Text style={styles.label}>location</Text>
+
+        <Text style={styles.label}>Location</Text>
         <TextInput
           style={styles.input}
           placeholder="Enter your location"
@@ -132,10 +144,28 @@ const EditProfile = () => {
         />
       </View>
 
+      <View style={styles.skillsSection}>
+        <Text style={styles.label}>Skills</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Add a skill"
+          value={skillInput}
+          onChangeText={setSkillInput}
+        />
+        <TouchableOpacity style={styles.addSkillButton} onPress={addSkill}>
+          <Text style={styles.addSkillButtonText}>Add Skill</Text>
+        </TouchableOpacity>
+        <View style={styles.skillsList}>
+          {profileData.skills && profileData.skills.map((skill, index) => (
+            <Text key={index} style={styles.skillItem}>{skill}</Text>
+          ))}
+        </View>
+      </View>
+
       <TouchableOpacity style={styles.doneButton} onPress={handleSave}>
         <Text style={styles.doneButtonText}>Done</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -143,7 +173,6 @@ export default EditProfile;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     paddingHorizontal: 16,
     backgroundColor: '#fff',
     paddingTop: 20,
@@ -168,7 +197,7 @@ const styles = StyleSheet.create({
   uploadButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    textTransform: 'lowercase',
+    textTransform: 'capitalize',
   },
   inputSection: {
     marginBottom: 20,
@@ -177,7 +206,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     marginBottom: 5,
-    textTransform: 'lowercase',
+    textTransform: 'capitalize',
   },
   input: {
     borderWidth: 1,
@@ -188,16 +217,44 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 20,
   },
+  skillsSection: {
+    marginBottom: 20,
+  },
+  addSkillButton: {
+    backgroundColor: '#34c759',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  addSkillButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    textTransform: 'capitalize',
+  },
+  skillItem: {
+    backgroundColor: '#f0f0f0',
+    padding: 8,
+    borderRadius: 8,
+    marginVertical: 5,
+    textAlign: 'center',
+  },
+  skillsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
   doneButton: {
     backgroundColor: '#34c759',
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: 'center',
+    marginBottom: 30,
   },
   doneButtonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
-    textTransform: 'lowercase',
+    textTransform: 'capitalize',
   },
 });

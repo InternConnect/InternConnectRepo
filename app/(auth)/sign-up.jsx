@@ -127,12 +127,12 @@ const styles = StyleSheet.create({
   header: {
     marginTop: hp(5),
     marginBottom: hp(3),
-    alignItems: 'center',
   },
   title: {
     color: '#22C55E',
     fontSize: 32,
     fontWeight: 'bold',
+    alignItems: 'left',
   },
   subtitle: {
     color: '#000',

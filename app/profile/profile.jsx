@@ -17,6 +17,7 @@ const Profile = () => {
     bio: 'Tell Us Your Story.',
     education: 'null',
     role: 'null',
+    skills: [], 
     profileImage: 'https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1',
   });
 
@@ -119,6 +120,20 @@ const Profile = () => {
 
         </View>
       </View>
+
+       {/* Skills Section */}
+       {profileData.skills && profileData.skills.length > 0 && (
+        <View style={styles.skillsSection}>
+          <Text style={styles.skillsTitle}>Skills</Text>
+          <View style={styles.skillsContainer}>
+            {profileData.skills.map((skill, index) => (
+              <Text key={index} style={styles.skill}>
+                {skill}
+              </Text>
+            ))}
+          </View>
+        </View>
+      )}
 
       <View style={styles.bioSection}>
         <Text style={styles.bioTitle}>BIO</Text>
@@ -278,4 +293,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
   },
+  skillsSection: {
+    backgroundColor: '#f8f8f8',
+    borderRadius: 10,
+    padding: 20,
+    marginVertical: 10,
+  },
+  skillsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  skillsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  skill: {
+    backgroundColor: '#e0e0e0',
+    borderRadius: 15,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    margin: 5,
+    fontSize: 14,
+    color: '#333',
+  },
+
 });

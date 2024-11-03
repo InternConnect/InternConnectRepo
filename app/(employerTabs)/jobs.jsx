@@ -1,10 +1,12 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '../context/authContext'; // Assuming auth context provides user data
 
 const PostJob = () => {
   const router = useRouter();
+  const { user } = useAuth();
   const [jobDetails, setJobDetails] = useState({
     title: '',
     company: '',
@@ -13,15 +15,34 @@ const PostJob = () => {
     requirements: '',
   });
 
-  const handlePostJob = () => {
-    // Validate fields before posting
+  const handlePostJob = async () => {
+    if (!user || !user.userId) {
+      Alert.alert('Error', 'You must be logged in to post a job.');
+      return;
+    }
+
     if (!jobDetails.title || !jobDetails.company || !jobDetails.location || !jobDetails.description) {
       Alert.alert('Please fill out all required fields.');
       return;
     }
-    // Handle job posting logic here
-    Alert.alert('Job Posted!', 'Your job has been successfully posted.');
-    setJobDetails({ title: '', company: '', location: '', description: '', requirements: '' });
+
+    const db = getFirestore();
+    try {
+      await addDoc(collection(db, 'jobPosts'), {
+        userId: user.userId,
+        title: jobDetails.title,
+        company: jobDetails.company,
+        location: jobDetails.location,
+        description: jobDetails.description,
+        requirements: jobDetails.requirements,
+        postTime: serverTimestamp(),
+      });
+      Alert.alert('Job Posted!', 'Your job has been successfully posted.');
+      setJobDetails({ title: '', company: '', location: '', description: '', requirements: '' });
+    } catch (error) {
+      console.error('Error adding job post to Firestore:', error);
+      Alert.alert('Error', 'Something went wrong while posting your job.');
+    }
   };
 
   const handleChange = (field, value) => {
@@ -32,7 +53,6 @@ const PostJob = () => {
     <ScrollView style={styles.mainContainer}>
       <Text style={styles.pageTitle}>Post a Job</Text>
 
-      {/* Company Name */}
       <TextInput
         style={styles.input}
         placeholder="Company Name"
@@ -40,8 +60,6 @@ const PostJob = () => {
         value={jobDetails.company}
         onChangeText={(text) => handleChange('company', text)}
       />
-
-      {/* Job Title */}
       <TextInput
         style={styles.input}
         placeholder="Job Title"
@@ -49,8 +67,6 @@ const PostJob = () => {
         value={jobDetails.title}
         onChangeText={(text) => handleChange('title', text)}
       />
-
-      {/* Location */}
       <TextInput
         style={styles.input}
         placeholder="Location"
@@ -58,8 +74,6 @@ const PostJob = () => {
         value={jobDetails.location}
         onChangeText={(text) => handleChange('location', text)}
       />
-
-      {/* Job Description */}
       <TextInput
         style={[styles.input, styles.textArea]}
         placeholder="Job Description"
@@ -69,8 +83,6 @@ const PostJob = () => {
         multiline
         numberOfLines={4}
       />
-
-      {/* Requirements */}
       <TextInput
         style={[styles.input, styles.textArea]}
         placeholder="Requirements (optional)"
@@ -81,7 +93,6 @@ const PostJob = () => {
         numberOfLines={3}
       />
 
-      {/* Post Job Button */}
       <TouchableOpacity style={styles.postButton} onPress={handlePostJob}>
         <Text style={styles.postButtonText}>Post Job</Text>
       </TouchableOpacity>

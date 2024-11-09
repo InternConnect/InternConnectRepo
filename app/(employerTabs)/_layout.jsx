@@ -1,7 +1,7 @@
 import { StyleSheet, View, Image } from 'react-native';
 import React from 'react';
 import { Tabs } from 'expo-router'; 
-import CustomHeader from '../../components/CustomHeader';
+import CustomHeader from '../../components/CustomHeader2';
 import { icons } from '../../constants';
 
 const TabIcon = ({ icon, focused }) => {

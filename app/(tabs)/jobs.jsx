@@ -1,81 +1,94 @@
-import { useRouter } from 'expo-router';
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Alert, StyleSheet } from 'react-native';
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { useAuth } from '../context/authContext'; // Import the auth context to get user data
+import { doc, getDoc } from 'firebase/firestore';
+import { Feather } from '@expo/vector-icons'; // Import Feather icons for UI
 
-const jobsData = [
-  { id: '1', company: 'Company A', title: 'Software Engineer', location: 'Cape Town' },
-  { id: '2', company: 'Company B', title: 'Data Scientist', location: 'Johannesburg' },
-  { id: '3', company: 'Company C', title: 'Product Manager', location: 'Durban' },
-];
+const JobRecommendations = () => {
+  const { user } = useAuth(); // Get the current logged-in user from auth context
+  const [userProfile, setUserProfile] = useState(null); // Store user profile data
+  const [recommendedJobs, setRecommendedJobs] = useState([]); // Store the list of recommended jobs
 
-const tipsData = [
-  'Tailor your resume for each job application.',
-  'Prepare for interviews by practicing common questions.',
-  'Network with professionals in your field.',
-  'Keep learning new skills relevant to your industry.',
-];
-
-const Jobs = () => {
-  const router = useRouter();
-  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+  const db = getFirestore(); // Initialize Firestore database
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTipIndex((prevIndex) => (prevIndex + 1) % tipsData.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+    // Fetch user profile
+    const fetchUserProfile = async () => {
+      try {
+        const userRef = doc(db, 'users', user.userId);
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          setUserProfile(userDoc.data());
+        } else {
+          console.log('User profile not found');
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    // Fetch job listings and recommend jobs based on user profile
+    const fetchJobs = async () => {
+      try {
+        const jobsCollection = collection(db, 'jobPosts');
+        const jobsSnapshot = await getDocs(jobsCollection);
+        const jobs = jobsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Check if userProfile is available before proceeding with recommendation
+        if (userProfile) {
+          const recommendedJobs = jobs.filter(job => {
+            const jobSkills = job.skills || [];
+            const userSkills = userProfile.skills || [];
+
+            // Recommend jobs where skills match or job title matches user's desired role
+            return (
+              jobSkills.some(skill => userSkills.includes(skill)) ||
+              (userProfile.role && job.title.toLowerCase() === userProfile.role.toLowerCase()) // Check if role exists
+            );
+          });
+          setRecommendedJobs(recommendedJobs);
+        }
+      } catch (error) {
+        console.error('Error fetching jobs:', error);
+        Alert.alert('Error', 'Failed to load job recommendations.');
+      }
+    };
+
+    if (user) {
+      fetchUserProfile().then(fetchJobs);
+    }
+  }, [user, userProfile]); // Re-run when user or userProfile changes
 
   const handleEasyApply = (jobId) => {
-    router.push(`/Jobs/jobDetails?id=${jobId}`);
+    console.log('Easy Apply for Job ID:', jobId);
   };
-
-  const renderJobItem = (item) => (
-    <View key={item.id} style={styles.jobCard}>
-      <View style={styles.jobInfo}>
-        <Text style={styles.companyName}>{item.company}</Text>
-        <Text style={styles.jobTitle}>{item.title}</Text>
-        <Text style={styles.location}>{item.location}</Text>
-        <TouchableOpacity style={styles.easyApplyButton} onPress={() => handleEasyApply(item.id)}>
-          <Text style={styles.easyApplyText}>Easy apply</Text>
-        </TouchableOpacity>
-      </View>
-      <TouchableOpacity style={styles.bookmarkButton}>
-        <Feather name="bookmark" size={24} color="green" />
-      </TouchableOpacity>
-    </View>
-  );
 
   return (
     <ScrollView style={styles.mainContainer}>
-      {/* Search Bar */}
-      <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Search here"
-          placeholderTextColor="#A9A9A9"
-        />
-        <TouchableOpacity style={styles.searchButton}>
-          <Ionicons name="arrow-forward" size={20} color="white" />
-        </TouchableOpacity>
-      </View>
-    </View>
-
-      {/* Job Recommendations */}
-      <Text style={styles.sectionHeader}>Job Recommendations</Text>
-      {jobsData.map(renderJobItem)}
-
-      {/* Intern Tips */}
-      <View style={styles.tipsContainer}>
-        <Text style={styles.tipsHeader}>Tips for Interns / Entry-Level Job Seekers</Text>
-        <Text style={styles.tipText}>{tipsData[currentTipIndex]}</Text>
-      </View>
-
-      {/* Additional Job Recommendations */}
-      <Text style={styles.sectionHeader}>More Job Recommendations</Text>
-      {jobsData.map(renderJobItem)}
+      <Text style={styles.sectionHeader}>Recommended Jobs</Text>
+      {recommendedJobs.length > 0 ? (
+        recommendedJobs.map((item) => (
+          <View key={item.id} style={styles.jobCard}>
+            <View style={styles.jobInfo}>
+              <Text style={styles.companyName}>{item.company}</Text>
+              <Text style={styles.jobTitle}>{item.title}</Text>
+              <Text style={styles.location}>{item.location}</Text>
+              <TouchableOpacity
+                style={styles.easyApplyButton}
+                onPress={() => handleEasyApply(item.id)}
+              >
+                <Text style={styles.easyApplyText}>Easy apply</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.bookmarkButton}>
+              <Feather name="bookmark" size={24} color="green" />
+            </TouchableOpacity>
+          </View>
+        ))
+      ) : (
+        <Text style={styles.noJobsText}>No matching jobs found at the moment. Please update your profile.</Text>
+      )}
     </ScrollView>
   );
 };
@@ -85,10 +98,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 16,
-    paddingTop: 20, 
-
+    paddingTop: 20,
   },
- 
   sectionHeader: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -107,10 +118,6 @@ const styles = StyleSheet.create({
   },
   jobInfo: {
     flex: 1,
-  },
-  bookmarkButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   companyName: {
     color: '#666',
@@ -136,41 +143,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
   },
-  tipsContainer: {
-    marginVertical: 20,
-    padding: 15,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-  },
-  tipsHeader: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  tipText: {
-    fontSize: 14,
-    color: '#333',
-  },
-  searchContainer: {
-    flexDirection: 'row',
+  bookmarkButton: {
+    justifyContent: 'center',
     alignItems: 'center',
-    borderColor: '#D3D3D3',
-    borderWidth: 1,
-    borderRadius: 50,
-    marginHorizontal: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginBottom: 10, 
   },
-  input: {
-    flex: 1,
+  noJobsText: {
+    textAlign: 'center',
+    color: '#999',
     fontSize: 16,
-  },
-  searchButton: {
-    backgroundColor: '#28a745', // Green color
-    borderRadius: 50,
-    padding: 10,
+    marginTop: 20,
   },
 });
 
-export default Jobs;
+export default JobRecommendations;

@@ -1,7 +1,7 @@
 import { StyleSheet, View, Image } from 'react-native';
 import React from 'react';
 import { Tabs } from 'expo-router'; 
-import CustomHeader from '../../components/CustomHeader2';
+import CustomHeader2 from '../../components/CustomHeader2';
 import { icons } from '../../constants';
 
 const TabIcon = ({ icon, focused }) => {
@@ -36,7 +36,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="home"
           options={{
-            headerTitle: () => <CustomHeader title="employer Home" />, // Pass the title "Home"
+            headerTitle: () => <CustomHeader2 title="Home" />, // Pass the title "Home"
             headerShown: true,
             tabBarIcon: ({ focused }) => (
               <TabIcon icon={icons.home} focused={focused} />
@@ -47,7 +47,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="search"
           options={{
-            headerTitle: () => <CustomHeader title="employer Search" />, // Pass the title "Search"
+            headerTitle: () => <CustomHeader2 title="Search" />, // Pass the title "Search"
             headerShown: true,
             tabBarIcon: ({ focused }) => (
               <TabIcon icon={icons.search} focused={focused} />
@@ -58,7 +58,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="notifications"
           options={{
-            headerTitle: () => <CustomHeader title="employeer Notifications" />, // Pass the title "Notifications"
+            headerTitle: () => <CustomHeader2 title="Notifications" />, // Pass the title "Notifications"
             headerShown: true,
             tabBarIcon: ({ focused }) => (
               <TabIcon icon={icons.notification} focused={focused} />
@@ -69,7 +69,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="jobs"
           options={{
-            headerTitle: () => <CustomHeader title="Jobs" />, // Pass the title "Jobs"
+            headerTitle: () => <CustomHeader2 title="Jobs" />, // Pass the title "Jobs"
             headerShown: true,
             tabBarIcon: ({ focused }) => (
               <TabIcon icon={icons.suitcase} focused={focused} />

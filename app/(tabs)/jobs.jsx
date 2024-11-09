@@ -4,8 +4,12 @@ import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { useAuth } from '../context/authContext'; // Import the auth context to get user data
 import { doc, getDoc } from 'firebase/firestore';
 import { Feather } from '@expo/vector-icons'; // Import Feather icons for UI
+import { useRouter } from 'expo-router';
+
 
 const JobRecommendations = () => {
+  const router = useRouter();
+
   const { user } = useAuth(); // Get the current logged-in user from auth context
   const [userProfile, setUserProfile] = useState(null); // Store user profile data
   const [recommendedJobs, setRecommendedJobs] = useState([]); // Store the list of recommended jobs
@@ -60,8 +64,8 @@ const JobRecommendations = () => {
     }
   }, [user, userProfile]); // Re-run when user or userProfile changes
 
-  const handleEasyApply = (jobId) => {
-    console.log('Easy Apply for Job ID:', jobId);
+  const handleEasyApply = (job) => {
+    router.push(`/Jobs/jobDetails?id=${job.id}`); // Use job.id
   };
 
   return (
@@ -76,7 +80,7 @@ const JobRecommendations = () => {
               <Text style={styles.location}>{item.location}</Text>
               <TouchableOpacity
                 style={styles.easyApplyButton}
-                onPress={() => handleEasyApply(item.id)}
+                onPress={() => handleEasyApply(item)}
               >
                 <Text style={styles.easyApplyText}>Easy apply</Text>
               </TouchableOpacity>

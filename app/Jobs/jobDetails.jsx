@@ -1,19 +1,17 @@
-// app\Jobs\jobDetails.jsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native'; // Import useRoute from react-navigation
 import { Feather } from '@expo/vector-icons';
 import { doc, getDoc } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
 import { useAuth } from '../context/authContext';
-import { useRouter } from 'expo-router'; // Import expo-router
+import { useRouter } from 'expo-router';
+import { useRoute } from '@react-navigation/native';
 
 const JobDetails = () => {
-  const navigation = useNavigation();
-  const router = useRouter(); // Initialize expo-router
-  const route = useRoute(); // Access route for parameters
-  const { id } = route.params || {}; // Retrieve the 'id' parameter from route params
-  const { user } = useAuth();
+  const router = useRouter(); // Use useRouter for navigation
+  const route = useRoute(); // Access route params
+  const { id } = route.params || {}; // Retrieve 'id' from route params
+  const { user } = useAuth(); // Access the current user state
   const [job, setJob] = useState(null);
   const db = getFirestore();
 
@@ -51,13 +49,13 @@ const JobDetails = () => {
   }
 
   const handleApplyNow = () => {
-    // Pass job.id and job.title as parameters
-    router.push(`/Jobs/uploadCV?jobId=${job.id}&jobTitle=${job.title}&company=${job.company}&location=${job.location}&postedDate=${job.postedDate}&userId=${user.userId}`); 
+    // Redirect user to Upload CV screen with the job details
+    router.push(`/Jobs/uploadCV?jobId=${job.id}&jobTitle=${job.title}&company=${job.company}&location=${job.location}&postedDate=${job.postedDate}&userId=${user.userId}`);
   };
 
   return (
     <ScrollView style={styles.mainContainer}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
         <Feather name="arrow-left" size={24} color="#333" />
       </TouchableOpacity>
       <Text style={styles.companyName}>{job.company}</Text>
@@ -127,39 +125,35 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
-    marginVertical: 10,
+    marginTop: 15,
+    marginBottom: 5,
   },
   descriptionText: {
     fontSize: 16,
-    color: '#555',
-    lineHeight: 22,
+    color: '#333',
+    marginBottom: 15,
   },
   skillsList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginVertical: 10,
+    marginBottom: 15,
   },
   skillItem: {
-    backgroundColor: '#f0f0f0',
-    padding: 8,
-    borderRadius: 8,
+    backgroundColor: '#e0e0e0',
+    padding: 5,
     margin: 5,
-    textAlign: 'center',
+    borderRadius: 8,
   },
   applyButton: {
     backgroundColor: '#2CB67D',
-    borderRadius: 8,
-    paddingVertical: 12,
+    paddingVertical: 10,
+    borderRadius: 20,
     alignItems: 'center',
-    marginTop: 350,
   },
   applyButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
   },
 });
 
 export default JobDetails;
-

@@ -6,9 +6,11 @@ import { Feather } from '@expo/vector-icons';
 import { doc, getDoc } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
 import { useAuth } from '../context/authContext';
+import { useRouter } from 'expo-router'; // Import expo-router
 
 const JobDetails = () => {
   const navigation = useNavigation();
+  const router = useRouter(); // Initialize expo-router
   const route = useRoute(); // Access route for parameters
   const { id } = route.params || {}; // Retrieve the 'id' parameter from route params
   const { user } = useAuth();
@@ -48,6 +50,11 @@ const JobDetails = () => {
     );
   }
 
+  const handleApplyNow = () => {
+    // Pass job.id and job.title as parameters
+    router.push(`/Jobs/uploadCV?jobId=${job.id}&jobTitle=${job.title}&company=${job.company}&location=${job.location}&postedDate=${job.postedDate}&userId=${user.userId}`); 
+  };
+
   return (
     <ScrollView style={styles.mainContainer}>
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -74,7 +81,7 @@ const JobDetails = () => {
           </View>
         </>
       )}
-      <TouchableOpacity style={styles.applyButton} onPress={() => Alert.alert('Application sent!', 'Your application has been submitted.')}>
+      <TouchableOpacity style={styles.applyButton} onPress={handleApplyNow}>
         <Text style={styles.applyButtonText}>Apply Now</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -155,3 +162,4 @@ const styles = StyleSheet.create({
 });
 
 export default JobDetails;
+

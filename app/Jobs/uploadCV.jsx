@@ -1,18 +1,74 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+// app\Jobs\uploadCV.jsx
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
+import { useAuth } from '../context/authContext';
 
 const UploadCV = () => {
   const router = useRouter();
+  const { user } = useAuth();
+  const { jobId, jobTitle, company, location, postedDate, userId } = router.params || {}; 
+  const [cvLink, setCvLink] = useState('');
+  const db = getFirestore();
 
   const handleBack = () => {
     router.back();
   };
 
-  const handleUpload = () => {
-    // Handle CV upload logic here
-    console.log('Uploading CV...');
+  const handleUpload = async () => {
+    if (!cvLink) {
+      Alert.alert('Error', 'Please enter your CV link.');
+      return;
+    }
+
+    // Check if jobId and userId are available
+    if (!jobId || !userId) {
+      Alert.alert('Error', 'Job or user information is missing.');
+      return;
+    }
+
+    try {
+      const userRef = doc(db, 'users', userId); 
+      const jobRef = doc(db, 'jobPosts', jobId);
+
+      const jobDoc = await getDoc(jobRef);
+
+      if (jobDoc.exists()) {
+        const applicants = jobDoc.data()?.applicants || [];
+        
+        applicants.push({
+          userId: userId,
+          cvLink: cvLink,
+          appliedDate: new Date(),
+        });
+
+        // Update the 'applicants' array in the job document
+        await setDoc(jobRef, { applicants }, { merge: true });
+
+        // Add the jobId to the user's applications array
+        await setDoc(userRef, { 
+          applications: {
+            [jobId]: {
+              jobTitle: jobTitle,
+              company: company,
+              location: location,
+              postedDate: postedDate
+            }
+          }
+        }, { merge: true });
+
+        Alert.alert('Success', 'Your application has been submitted successfully!');
+        router.back();
+      } else {
+        Alert.alert('Error', 'Job not found.');
+      }
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      Alert.alert('Error', 'Failed to submit application.');
+    }
   };
 
   return (
@@ -25,23 +81,24 @@ const UploadCV = () => {
       </View>
 
       {/* Job Title and Details */}
-      <Text style={styles.jobTitle}>Software Engineer</Text>
-      <Text style={styles.companyName}>Toptal</Text>
-      <Text style={styles.postedDate}>Posted on 20 July</Text>
+      <Text style={styles.jobTitle}>{jobTitle}</Text>
+      <Text style={styles.companyName}>{company}</Text>
+      <Text style={styles.postedDate}>Posted on {postedDate}</Text>
 
-      {/* Upload Section */}
-      <Text style={styles.uploadText}>Add a CV for the employer</Text>
-      <TouchableOpacity style={styles.uploadBox}>
-        <Image source={{ uri: 'https://img.icons8.com/fluency/48/000000/upload.png' }} style={styles.uploadIcon} />
-        <View>
-          <Text style={styles.uploadBoxText}>upload a CV</Text>
-          <Text style={styles.uploadBoxSubtext}>pdf, docx, txt</Text>
-        </View>
-      </TouchableOpacity>
+      {/* CV Link Input */}
+      <View style={styles.uploadText}>
+        <Text style={styles.uploadText}>Add a CV Link for the employer</Text>
+        <TextInput 
+          style={styles.cvLinkInput} 
+          placeholder="Enter your CV link" 
+          value={cvLink}
+          onChangeText={setCvLink}
+        />
+      </View>
 
       {/* Upload Button */}
       <TouchableOpacity style={styles.uploadButton} onPress={handleUpload}>
-        <Text style={styles.uploadButtonText}>upload</Text>
+        <Text style={styles.uploadButtonText}>Submit Application</Text>
       </TouchableOpacity>
     </View>
   );
@@ -78,26 +135,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
-  uploadBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f2f2f2',
+  cvLinkInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
     borderRadius: 8,
-    padding: 16,
+    padding: 10,
     marginBottom: 20,
-  },
-  uploadIcon: {
-    width: 48,
-    height: 48,
-    marginRight: 16,
-  },
-  uploadBoxText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  uploadBoxSubtext: {
-    fontSize: 14,
-    color: '#666',
   },
   uploadButton: {
     backgroundColor: '#2CB67D',

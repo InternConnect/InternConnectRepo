@@ -43,7 +43,7 @@ const UploadCV = () => {
     if (document) {
       console.log('Document ready for upload:', document);
       Alert.alert('Success', 'Your CV has been uploaded successfully.');
-      router.push('/jobDetails'); // Redirect after uploading
+      router.push('(tabs)/home'); // Redirect after uploading
     } else {
       Alert.alert('Error', 'Please select a document to upload.');
     }
@@ -51,10 +51,7 @@ const UploadCV = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.jobTitle}>Software Engineer</Text>
-      <Text style={styles.company}>Toptal</Text>
-      <Text style={styles.datePosted}>Posted on 20 July</Text>
-      
+    
       <Text style={styles.label}>Add a CV for the employer</Text>
 
       <TouchableOpacity style={styles.uploadBox} onPress={selectDocument}>

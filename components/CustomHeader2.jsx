@@ -34,6 +34,11 @@ const CustomHeader = ({ title }) => {
     router.push('/posts/posts'); //go to posts
   };
 
+  const handleMessages = () => {
+    console.log('Navigate to Messages');
+    router.push('/messages/messages'); //go to messages
+  };
+
   // Logout logic using the logout function from useAuth
   const handleLogout = async () => {
     try {
@@ -51,7 +56,7 @@ const CustomHeader = ({ title }) => {
         <MaterialIcons testID="menuIcon" name="menu" size={24} color="#333" onPress={openMenu} />
         <Text style={styles.headerText}>{title}</Text>
         <MaterialIcons onPress={handlePost} name="add" size={24} color="#333" style={styles.addIcon} />
-        <MaterialIcons name="mail" size={24} color="#333" />
+        <MaterialIcons onPress={handleMessages} name="mail" size={24} color="#333" />
       </View>
 
       {/* Sidebar */}

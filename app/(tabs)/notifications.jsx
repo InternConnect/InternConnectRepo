@@ -3,12 +3,12 @@ import { View, Text, FlatList, Image, StyleSheet } from 'react-native';
 import { useAuth } from '../context/authContext';
 import { databaseFB } from '../../FirebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
-import { formatDistanceToNow } from 'date-fns';
 
 const Notifications = () => {
   const { user } = useAuth();
   const currentUserId = user?.userId;
   const [notifications, setNotifications] = useState([]);
+  const [users, setUsers] = useState({}); // To store user details (name, profile picture)
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -16,7 +16,27 @@ const Notifications = () => {
         const notificationsRef = doc(databaseFB, 'notifications', currentUserId);
         const notificationsSnap = await getDoc(notificationsRef);
         if (notificationsSnap.exists()) {
-          setNotifications(notificationsSnap.data().notifications || []);
+          const notificationsData = notificationsSnap.data().notifications || [];
+          setNotifications(notificationsData);
+
+          // Fetch user details for notifications
+          const userPromises = notificationsData.map(async (notification) => {
+            const userDoc = await getDoc(doc(databaseFB, 'users', notification.userId));
+            return {
+              userId: notification.userId,
+              ...(userDoc.exists() ? userDoc.data() : {}),
+            };
+          });
+
+          const usersList = await Promise.all(userPromises);
+          const usersData = usersList.reduce((acc, user) => {
+            acc[user.userId] = {
+              username: user.fullName || 'Unknown User',
+              profilePicture: user.profileImage || 'https://via.placeholder.com/50',
+            };
+            return acc;
+          }, {});
+          setUsers(usersData); // Save all fetched user data
         }
       } catch (error) {
         console.error('Error fetching notifications:', error);
@@ -26,49 +46,59 @@ const Notifications = () => {
     fetchNotifications();
   }, [currentUserId]);
 
-  const renderNotification = ({ item }) => (
-    <View style={styles.notificationContainer}>
-      <Image
-        source={{ uri: 'https://via.placeholder.com/50' }}
-        style={styles.avatar}
-      />
-      <View>
-        <Text style={styles.notificationText}>
-          <Text style={styles.username}>{item.userId}</Text>{' '}
-          {item.type === 'like' ? 'liked your post' : 'commented on your post'}
-        </Text>
-        <Text style={styles.timestamp}>just now</Text>
+  const renderNotification = ({ item }) => {
+    const user = users[item.userId] || {};
+    return (
+      <View style={styles.notificationContainer}>
+        <Image
+          source={{ uri: user.profilePicture }}
+          style={styles.profileImage}
+        />
+        <View style={styles.textContainer}>
+          <Text style={styles.notificationText}>
+            <Text style={styles.username}>{user.username}</Text> {item.type} your post
+          </Text>
+          <Text style={styles.timestamp}>{new Date(item.createdAt).toLocaleString()}</Text>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <View style={styles.container}>
       <FlatList
         data={notifications}
+        keyExtractor={(item, index) => `${item.userId}-${index}`}
         renderItem={renderNotification}
-        keyExtractor={(item, index) => index.toString()}
+        ListEmptyComponent={<Text style={styles.emptyText}>No notifications yet.</Text>}
       />
     </View>
   );
 };
 
+export default Notifications;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: '#fff',
+    padding: 10,
   },
   notificationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
-  avatar: {
+  profileImage: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    marginRight: 15,
+    marginRight: 10,
+  },
+  textContainer: {
+    flex: 1,
   },
   notificationText: {
     fontSize: 16,
@@ -77,10 +107,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   timestamp: {
-    color: '#888',
     fontSize: 12,
+    color: '#888',
     marginTop: 5,
   },
+  emptyText: {
+    textAlign: 'center',
+    color: '#888',
+    marginTop: 20,
+    fontSize: 16,
+  },
 });
-
-export default Notifications;

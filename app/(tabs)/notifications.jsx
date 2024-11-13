@@ -1,32 +1,53 @@
-import React from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, Image, StyleSheet } from 'react-native';
+import { useAuth } from '../context/authContext';
+import { databaseFB } from '../../FirebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
+import { formatDistanceToNow } from 'date-fns';
 
-const jobsData = [
-  { id: '1', user: 'Ayoob', action: 'liked your post', time: '45 minutes ago', avatar: 'https://play-lh.googleusercontent.com/2zorpA9peRFcwZM5SLSAx80gLCA3YrknRXQwPW-Hz2AJyBcvBJiO9vuP6DvlX3FRZXMv=w526-h296-rw' },
-  { id: '2', user: 'Bob', action: 'liked your post', time: '2 hour ago', avatar: 'https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/984a0843-8116-45ed-bc71-795b16152ccd/dbx2f04-ae108807-0cbd-48dc-a269-6c5a607f0bef.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzk4NGEwODQzLTgxMTYtNDVlZC1iYzcxLTc5NWIxNjE1MmNjZFwvZGJ4MmYwNC1hZTEwODgwNy0wY2JkLTQ4ZGMtYTI2OS02YzVhNjA3ZjBiZWYuanBnIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.cyHy48zcEH55Sfv6sLd2_HOYfjqp7pn8uMp1TTMRiHA' },
-  { id: '3', user: 'Jessica', action: 'commented on your post', time: '5 hours ago', avatar: 'https://thumbs.dreamstime.com/b/female-user-profile-avatar-woman-character-screen-saver-happy-emotions-female-user-profile-avatar-199601144.jpg' },
-];
+const Notifications = () => {
+  const { user } = useAuth();
+  const currentUserId = user?.userId;
+  const [notifications, setNotifications] = useState([]);
 
-const Jobs = () => {
-  const renderJobItem = ({ item }) => (
-    <TouchableOpacity style={styles.jobItem}>
-      <Image source={{ uri: item.avatar }} style={styles.avatar} />
-      <View style={styles.jobTextContainer}>
-        <Text style={styles.jobText}>
-          <Text style={styles.userName}>{item.user}</Text> {item.action}
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const notificationsRef = doc(databaseFB, 'notifications', currentUserId);
+        const notificationsSnap = await getDoc(notificationsRef);
+        if (notificationsSnap.exists()) {
+          setNotifications(notificationsSnap.data().notifications || []);
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    };
+
+    fetchNotifications();
+  }, [currentUserId]);
+
+  const renderNotification = ({ item }) => (
+    <View style={styles.notificationContainer}>
+      <Image
+        source={{ uri: 'https://via.placeholder.com/50' }}
+        style={styles.avatar}
+      />
+      <View>
+        <Text style={styles.notificationText}>
+          <Text style={styles.username}>{item.userId}</Text>{' '}
+          {item.type === 'like' ? 'liked your post' : 'commented on your post'}
         </Text>
-        <Text style={styles.jobTime}>{item.time}</Text>
+        <Text style={styles.timestamp}>just now</Text>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={jobsData}
-        keyExtractor={(item) => item.id}
-        renderItem={renderJobItem}
-        contentContainerStyle={styles.jobList}
+        data={notifications}
+        renderItem={renderNotification}
+        keyExtractor={(item, index) => index.toString()}
       />
     </View>
   );
@@ -35,42 +56,31 @@ const Jobs = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 20,
     backgroundColor: '#fff',
-    paddingHorizontal: 16,
   },
-  jobList: {
-    paddingVertical: 20,
-  },
-  jobItem: {
+  notificationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 16,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-    marginBottom: 12,
+    marginBottom: 15,
   },
   avatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    marginRight: 16,
+    marginRight: 15,
   },
-  jobTextContainer: {
-    flex: 1,
-  },
-  jobText: {
+  notificationText: {
     fontSize: 16,
-    color: '#333',
   },
-  userName: {
+  username: {
     fontWeight: 'bold',
   },
-  jobTime: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 4,
+  timestamp: {
+    color: '#888',
+    fontSize: 12,
+    marginTop: 5,
   },
 });
 
-export default Jobs;
+export default Notifications;

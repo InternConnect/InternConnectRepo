@@ -4,10 +4,14 @@ import { databaseFB } from '../../FirebaseConfig';
 import { collection, getDocs, setDoc,doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { FontAwesome, Feather, AntDesign } from '@expo/vector-icons';
 import { useAuth } from '../context/authContext'; // Get the logged-in user's information
+import { useRouter } from 'expo-router'; // Import useRouter
+
 
 const Home = () => {
   const { user } = useAuth(); // Get user data from auth context
   const currentUserId = user?.userId; // Set the logged-in user's ID
+  const router = useRouter(); // Initialize the router
+
 
   const [posts, setPosts] = useState([]); // Keeps track of posts
   const [users, setUsers] = useState({}); // Keeps track of user info like names
@@ -143,13 +147,23 @@ const Home = () => {
     setCommentVisible(false);
   };
 
+  //opens the profile picture
+  const handleProfilePictureClick = (userId) => {
+    console.log('Navigating to profile with userId:', userId);
+
+    router.push(`/profile/ViewProfile?id=${userId}`);
+
+  };
+
   const renderPost = ({ item }) => (
     <View style={styles.postContainer}>
       <View style={styles.header}>
-        <Image
-          source={{ uri: users[item.userId]?.profilePicture || 'https://via.placeholder.com/50' }}
-          style={styles.profileImage}
-        />
+      <TouchableOpacity onPress={() => handleProfilePictureClick(item.userId)}>
+          <Image
+            source={{ uri: users[item.userId]?.profilePicture || 'https://via.placeholder.com/50' }}
+            style={styles.profileImage}
+          />
+        </TouchableOpacity>
         <View style={styles.headerText}>
           <Text style={styles.userName}>{users[item.userId]?.username || 'Unknown User'}</Text>
           <Text style={styles.timestamp}>

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, TouchableOpacity, FlatList, Text, Image, Modal, TextInput as NativeTextInput } from 'react-native';
+import { StyleSheet,Image , View, TextInput, TouchableOpacity, FlatList, Text, Modal, TextInput as NativeTextInput } from 'react-native';
 import { Ionicons, FontAwesome, AntDesign, Feather } from '@expo/vector-icons';
 import { useAuth } from '../context/authContext';
 import { databaseFB } from '../../FirebaseConfig';
+import Loading from '../../components/Loading';
+import { images } from '../../constants';
 import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 
 const Search = () => {
@@ -13,6 +15,7 @@ const Search = () => {
   const [isCommentVisible, setCommentVisible] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [likedPosts, setLikedPosts] = useState(new Set());
+  const [loading, setLoading] = useState(false);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -20,19 +23,20 @@ const Search = () => {
       return;
     }
 
+    setLoading(true); // Set loading to true when search starts
+
     try {
       const postsRef = collection(databaseFB, 'posts');
       const querySnapshot = await getDocs(postsRef);
 
       const matchedPosts = [];
-      const normalizedSearchQuery = searchQuery.toLowerCase().trim(); // Normalize query to lowercase
+      const normalizedSearchQuery = searchQuery.toLowerCase().trim();
 
       for (const docSnap of querySnapshot.docs) {
         const postData = docSnap.data();
         const userDoc = await getDoc(doc(databaseFB, 'users', postData.userId));
         const userData = userDoc.data();
 
-        // Normalize post content to lowercase and check if it contains the search term as a full word
         if (new RegExp(`\\b${normalizedSearchQuery}\\b`, 'i').test(postData.post)) {
           matchedPosts.push({
             id: docSnap.id,
@@ -46,6 +50,8 @@ const Search = () => {
       setFilteredPosts(matchedPosts);
     } catch (error) {
       console.error('Error fetching filtered posts:', error);
+    } finally {
+      setLoading(false); // Set loading to false once data is fetched
     }
   };
 
@@ -139,11 +145,15 @@ const Search = () => {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={filteredPosts}
-        keyExtractor={(item) => item.id}
-        renderItem={renderPost}
-      />
+      {loading ? (
+        <Loading size={200} /> // Display loader while loading
+      ) : (
+        <FlatList
+          data={filteredPosts}
+          keyExtractor={(item) => item.id}
+          renderItem={renderPost}
+        />
+      )}
 
       <Modal visible={isCommentVisible} animationType="slide" onRequestClose={() => setCommentVisible(false)}>
         <View style={styles.modalContainer}>
@@ -250,11 +260,9 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
   iconGroup: {
     flexDirection: 'row',
-    alignItems: 'center',
   },
   icon: {
     flexDirection: 'row',
@@ -263,11 +271,12 @@ const styles = StyleSheet.create({
   },
   iconText: {
     marginLeft: 5,
+    fontSize: 14,
   },
   modalContainer: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -275,34 +284,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   closeButton: {
-    color: '#34c759',
     fontSize: 16,
+    color: 'red',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   commentContainer: {
-    paddingVertical: 10,
+    marginBottom: 10,
   },
   commentText: {
-    fontSize: 16,
+    fontSize: 14,
   },
   commentUsername: {
     fontWeight: 'bold',
   },
   commentInput: {
+    borderColor: '#D3D3D3',
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
+    borderRadius: 5,
     padding: 10,
-    marginVertical: 10,
+    marginBottom: 10,
   },
   addCommentButton: {
-    backgroundColor: '#34c759',
+    backgroundColor: '#28a745',
     padding: 10,
-    borderRadius: 10,
-    alignItems: 'center',
+    borderRadius: 5,
   },
   addCommentText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: 'white',
+    textAlign: 'center',
   },
 });
 

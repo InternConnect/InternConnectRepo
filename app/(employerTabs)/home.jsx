@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react'; 
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { databaseFB } from '../../FirebaseConfig';
-import { collection, getDocs, doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { collection, getDocs, setDoc,doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { FontAwesome, Feather, AntDesign } from '@expo/vector-icons';
 import { useAuth } from '../context/authContext'; // Get the logged-in user's information
-import { formatDistanceToNow } from 'date-fns';
+import { useRouter } from 'expo-router'; // Import useRouter
+
 
 const Home = () => {
   const { user } = useAuth(); // Get user data from auth context
   const currentUserId = user?.userId; // Set the logged-in user's ID
+  const router = useRouter(); // Initialize the router
+
 
   const [posts, setPosts] = useState([]); // Keeps track of posts
   const [users, setUsers] = useState({}); // Keeps track of user info like names
@@ -56,6 +59,27 @@ const Home = () => {
     fetchPosts();
   }, []);
 
+  const addNotification = async (type, postId) => {
+    const postRef = doc(databaseFB, 'posts', postId);
+    const postSnap = await getDoc(postRef);
+    const postData = postSnap.data();
+    const postOwnerId = postData?.userId;
+  
+    if (postOwnerId !== currentUserId) {
+      const notificationRef = doc(databaseFB, 'notifications', postOwnerId); 
+  
+      // Use setDoc with merge: true to create or update the document
+      await setDoc(notificationRef, {
+        notifications: arrayUnion({
+          type,
+          postId,
+          userId: currentUserId,
+          createdAt: new Date().toISOString(),
+        }),
+      }, { merge: true }); 
+    }
+  };
+
   const handleLike = async (postId) => {
     const postRef = doc(databaseFB, 'posts', postId);
     try {
@@ -77,6 +101,7 @@ const Home = () => {
           likes: arrayUnion(currentUserId),
         });
         setLikedPosts((prev) => new Set(prev).add(postId));
+        await addNotification('like', postId);
       }
 
       const updatedPosts = posts.map((p) =>
@@ -116,20 +141,34 @@ const Home = () => {
       setPosts(updatedPosts);
     }
 
+    await addNotification('comment', selectedPost.id);
+
     setNewComment('');
     setCommentVisible(false);
+  };
+
+  //opens the profile picture
+  const handleProfilePictureClick = (userId) => {
+    console.log('Navigating to profile with userId:', userId);
+
+    router.push(`/profile/ViewProfile?id=${userId}`);
+
   };
 
   const renderPost = ({ item }) => (
     <View style={styles.postContainer}>
       <View style={styles.header}>
-        <Image
-          source={{ uri: users[item.userId]?.profilePicture || 'https://via.placeholder.com/50' }}
-          style={styles.profileImage}
-        />
+      <TouchableOpacity onPress={() => handleProfilePictureClick(item.userId)}>
+          <Image
+            source={{ uri: users[item.userId]?.profilePicture || 'https://via.placeholder.com/50' }}
+            style={styles.profileImage}
+          />
+        </TouchableOpacity>
         <View style={styles.headerText}>
           <Text style={styles.userName}>{users[item.userId]?.username || 'Unknown User'}</Text>
-          <Text style={styles.timestamp}>just now</Text>
+          <Text style={styles.timestamp}>
+            just now
+          </Text>
         </View>
         <TouchableOpacity style={styles.followButton}>
           <Text style={styles.followButtonText}>Follow</Text>
@@ -143,7 +182,11 @@ const Home = () => {
       <View style={styles.footer}>
         <View style={styles.iconGroup}>
           <TouchableOpacity style={styles.icon} onPress={() => handleLike(item.id)}>
-            <AntDesign name={likedPosts.has(item.id) ? 'heart' : 'hearto'} size={20} color={likedPosts.has(item.id) ? 'green' : 'black'} />
+            <AntDesign
+              name={likedPosts.has(item.id) ? 'heart' : 'hearto'}
+              size={20}
+              color={likedPosts.has(item.id) ? 'green' : 'black'}
+            />
             <Text style={styles.iconText}>{item.likes?.length || 0}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.icon} onPress={() => openComments(item)}>
@@ -173,7 +216,7 @@ const Home = () => {
       <FlatList
         data={posts}
         renderItem={renderPost}
-        keyExtractor={(item) => item.id} 
+        keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 20 }}
       />
 

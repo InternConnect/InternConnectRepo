@@ -3,7 +3,7 @@ import { StyleSheet,Image , View, TextInput, TouchableOpacity, FlatList, Text, M
 import { Ionicons, FontAwesome, AntDesign, Feather } from '@expo/vector-icons';
 import { useAuth } from '../context/authContext';
 import { databaseFB } from '../../FirebaseConfig';
-import Loading from '../../components/Loading';
+import Loading from '../../components/Loading2';
 import { images } from '../../constants';
 import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 

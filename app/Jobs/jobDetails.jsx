@@ -6,6 +6,7 @@ import { getFirestore } from 'firebase/firestore';
 import { useAuth } from '../context/authContext';
 import { useRouter } from 'expo-router';
 import { useRoute } from '@react-navigation/native';
+import Loading from '../../components/Loading2';
 
 const JobDetails = () => {
   const router = useRouter(); // Use useRouter for navigation
@@ -42,9 +43,7 @@ const JobDetails = () => {
 
   if (!job) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading job details...</Text>
-      </View>
+      <Loading size={100} />
     );
   }
 
@@ -97,10 +96,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#666',
   },
   backButton: {
     marginBottom: 20,

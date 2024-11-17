@@ -11,7 +11,7 @@ import {
 import { doc, getDoc } from 'firebase/firestore';
 import { databaseFB } from '../../FirebaseConfig';
 import { useRoute } from '@react-navigation/native';
-
+import ViewProfileHeader from '../../components/viewProfileHeader';
 const ViewProfile = () => {
   const [userDetails, setUserDetails] = useState(null);
   const [error, setError] = useState(null);
@@ -62,6 +62,7 @@ const ViewProfile = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <ViewProfileHeader/>
       <View style={styles.profileInfo}>
         <Image
           source={{

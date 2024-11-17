@@ -3,29 +3,15 @@ import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView } from 'react-na
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-const ProfileHeader = ({ title, userRole }) => {
+const ProfileHeader = ({ title }) => {
   const router = useRouter();
-
-  const handleBack = () => {
-    if (title === "Edit Profile") {
-      // Check user role and navigate to the appropriate home screen
-      if (userRole === "employer") {
-        router.replace('/employerTabs/home'); // Navigate to employer's home page
-      } else if (userRole === "job-seeker") {
-        router.replace('/tabs/home'); // Navigate to job seeker's home page
-      }
-    } else if (title === "Profile") {
-      // If you are on the profile page, just go back
-      router.back();
-    }
-  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
       <View style={styles.header}>
         {/* Back Button */}
-        <TouchableOpacity onPress={handleBack}>
+        <TouchableOpacity onPress={() => router.back()}>
           <AntDesign name="arrowleft" size={24} color="#333" />
         </TouchableOpacity>
 
@@ -50,7 +36,7 @@ const styles = StyleSheet.create({
   },
   header: {
     width: '100%',
-    height: 60,
+    height: 80,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

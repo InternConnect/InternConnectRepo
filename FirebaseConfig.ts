@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 // Firebase configuration
+
 const firebaseConfig = {
   apiKey: "AIzaSyAe3TwmcwhAoSqtNT12XBsHFqFkUxnSx0g",
   authDomain: "internconnectdb.firebaseapp.com",

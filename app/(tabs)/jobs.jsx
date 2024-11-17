@@ -6,18 +6,32 @@ import { doc, getDoc } from 'firebase/firestore';
 import { Feather } from '@expo/vector-icons'; // Import Feather icons for UI
 import { useRouter } from 'expo-router';
 
-
 const JobRecommendations = () => {
   const router = useRouter();
-
+  
   const { user } = useAuth(); // Get the current logged-in user from auth context
   const [userProfile, setUserProfile] = useState(null); // Store user profile data
   const [recommendedJobs, setRecommendedJobs] = useState([]); // Store the list of recommended jobs
 
   const db = getFirestore(); // Initialize Firestore database
 
+  const tipsData = [
+    'Tailor your resume for each job application.',
+    'Prepare for interviews by practicing common questions.',
+    'Network with professionals in your field.',
+    'Keep learning new skills relevant to your industry.',
+  ];
+
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+
   useEffect(() => {
-    // Fetch user profile
+    const interval = setInterval(() => {
+      setCurrentTipIndex((prevIndex) => (prevIndex + 1) % tipsData.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         const userRef = doc(db, 'users', user.userId);
@@ -32,23 +46,19 @@ const JobRecommendations = () => {
       }
     };
 
-    // Fetch job listings and recommend jobs based on user profile
     const fetchJobs = async () => {
       try {
         const jobsCollection = collection(db, 'jobPosts');
         const jobsSnapshot = await getDocs(jobsCollection);
         const jobs = jobsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Check if userProfile is available before proceeding with recommendation
         if (userProfile) {
           const recommendedJobs = jobs.filter(job => {
             const jobSkills = job.skills || [];
             const userSkills = userProfile.skills || [];
-
-            // Recommend jobs where skills match or job title matches user's desired role
             return (
               jobSkills.some(skill => userSkills.includes(skill)) ||
-              (userProfile.role && job.title.toLowerCase() === userProfile.role.toLowerCase()) // Check if role exists
+              (userProfile.role && job.title.toLowerCase() === userProfile.role.toLowerCase())
             );
           });
           setRecommendedJobs(recommendedJobs);
@@ -65,22 +75,29 @@ const JobRecommendations = () => {
   }, [user, userProfile]); // Re-run when user or userProfile changes
 
   const handleEasyApply = (job) => {
-    router.push(`/Jobs/jobDetails?id=${job.id}`); // Use job.id
+    router.push(`/Jobs/jobDetails?id=${job.id}`);
   };
 
   return (
     <ScrollView style={styles.mainContainer}>
       <Text style={styles.sectionHeader}>Recommended Jobs</Text>
+
+      {/* Display Tips Once at the Top */}
+      <View style={styles.tipsContainer}>
+        <Text style={styles.tipsHeader}>Tips for Interns / Entry-Level Job Seekers</Text>
+        <Text style={styles.tipText}>{tipsData[currentTipIndex]}</Text>
+      </View>
+
       {recommendedJobs.length > 0 ? (
-        recommendedJobs.map((item) => (
-          <View key={item.id} style={styles.jobCard}>
+        recommendedJobs.map((job) => (
+          <View key={job.id} style={styles.jobCard}>
             <View style={styles.jobInfo}>
-              <Text style={styles.companyName}>{item.company}</Text>
-              <Text style={styles.jobTitle}>{item.title}</Text>
-              <Text style={styles.location}>{item.location}</Text>
+              <Text style={styles.companyName}>{job.company}</Text>
+              <Text style={styles.jobTitle}>{job.title}</Text>
+              <Text style={styles.location}>{job.location}</Text>
               <TouchableOpacity
                 style={styles.easyApplyButton}
-                onPress={() => handleEasyApply(item)}
+                onPress={() => handleEasyApply(job)}
               >
                 <Text style={styles.easyApplyText}>Easy apply</Text>
               </TouchableOpacity>
@@ -156,6 +173,23 @@ const styles = StyleSheet.create({
     color: '#999',
     fontSize: 16,
     marginTop: 20,
+  },
+  tipsContainer: {
+    padding: 15,
+    backgroundColor: '#EAF7EF',
+    borderRadius: 8,
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  tipsHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  tipText: {
+    fontSize: 14,
+    color: '#2CB67D',
+    fontStyle: 'italic',
   },
 });
 

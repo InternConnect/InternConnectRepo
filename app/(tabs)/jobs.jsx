@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert, StyleSheet } from 'react-native';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { useAuth } from '../context/authContext'; // Import the auth context to get user data
-import { doc, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, updateDoc, arrayUnion,getDoc} from 'firebase/firestore';
 import { Feather } from '@expo/vector-icons'; // Import Feather icons for UI
 import { useRouter } from 'expo-router';
 
@@ -21,6 +20,20 @@ const JobRecommendations = () => {
     'Network with professionals in your field.',
     'Keep learning new skills relevant to your industry.',
   ];
+
+  //handle bookmarks
+  const handleBookmark = async (job) => {
+    try {
+      const userRef = doc(db, 'users', user.userId);
+      await updateDoc(userRef, {
+        savedJobs: arrayUnion({ id: job.id, ...job }), // Add job data to savedJobs array
+      });
+      Alert.alert('Success', 'Job saved successfully!');
+    } catch (error) {
+      console.error('Error bookmarking job:', error);
+      Alert.alert('Error', 'Failed to save job.');
+    }
+  };
 
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
 
@@ -102,7 +115,7 @@ const JobRecommendations = () => {
                 <Text style={styles.easyApplyText}>Easy apply</Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.bookmarkButton}>
+            <TouchableOpacity style={styles.bookmarkButton} onPress={() => handleBookmark(job)}>
               <Feather name="bookmark" size={24} color="green" />
             </TouchableOpacity>
           </View>

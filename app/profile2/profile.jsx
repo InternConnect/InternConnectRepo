@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f8f8',
     borderRadius: 10,
     padding: 20,
-    marginVertical: 20,
+    marginVertical: 30,
   },
   profileImage: {
     width: 100,

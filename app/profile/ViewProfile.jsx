@@ -10,12 +10,17 @@ import {
 } from 'react-native';
 import { doc, getDoc } from 'firebase/firestore';
 import { databaseFB } from '../../FirebaseConfig';
-import { useRoute } from '@react-navigation/native';
+import { useRoute,useNavigation} from '@react-navigation/native';
+import { useRouter } from 'expo-router'; // Import useRouter
+
+import { MaterialIcons } from '@expo/vector-icons';
 
 const ViewProfile = () => {
   const [userDetails, setUserDetails] = useState(null);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('posts');
+  const navigation = useNavigation();
+  const router = useRouter(); // Initialize the router
 
   const route = useRoute();
   const userId = route.params?.id;
@@ -60,8 +65,27 @@ const ViewProfile = () => {
     setActiveTab(tab);
   };
 
+  //opens the profile picture
+  const handleMessageIcon = (userId) => {
+    console.log('Navigating to view profile with userId:', userId);
+
+    router.push(`/messages/ChatScreen?id=${userId}`);
+
+  };
+
   return (
+    
     <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.headerContainer}>
+  <TouchableOpacity onPress={() => navigation.goBack()}>
+    <MaterialIcons name="arrow-back" size={24} color="black" />
+  </TouchableOpacity>
+  <Text style={styles.headerTitle}>View Profile</Text>
+  <TouchableOpacity onPress={() => handleMessageIcon(userId)}>
+  <MaterialIcons name="mail" size={24} color="black" />
+  </TouchableOpacity>
+</View>
+    
       <View style={styles.profileInfo}>
         <Image
           source={{
@@ -129,13 +153,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
   },
   headerContainer: {
+    width: '100%',
+    height: 60,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderColor: '#ddd',
+    borderBottomColor: '#D3D3D3',
   },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  
   profileImage: {
     width: 100,
     height: 100,

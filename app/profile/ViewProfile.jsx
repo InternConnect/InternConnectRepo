@@ -66,10 +66,10 @@ const ViewProfile = () => {
   };
 
   //opens the profile picture
-  const handleMessageIcon = (userId) => {
-    console.log('Navigating to view profile with userId:', userId);
+  const handleMessageIcon = (userId,userName) => {
+    console.log('Navigating to view profile with userId:', userId,userName);
 
-    router.push(`/messages/ChatScreen?id=${userId}`);
+    router.push(`/messages/ChatScreen?id=${userId}&name=${userName}`);
 
   };
 
@@ -81,7 +81,7 @@ const ViewProfile = () => {
     <MaterialIcons name="arrow-back" size={24} color="black" />
   </TouchableOpacity>
   <Text style={styles.headerTitle}>View Profile</Text>
-  <TouchableOpacity onPress={() => handleMessageIcon(userId)}>
+  <TouchableOpacity onPress={() => handleMessageIcon(userId,userDetails.fullName)}>
   <MaterialIcons name="mail" size={24} color="black" />
   </TouchableOpacity>
 </View>

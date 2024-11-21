@@ -38,9 +38,10 @@ const ChatScreen = () => {
           await addDoc(messagesCollection, {
             text: newMessage,
             senderId: senderId,  // Store the sender's ID
+            receiverId: id,       // Store the receiver's ID (use the recipient's ID)
             timestamp: new Date(),
           });
-          setNewMessage('');
+          setNewMessage('');  // Clear the input after sending the message
         } else {
           console.error('No authenticated user found');
         }
@@ -66,7 +67,9 @@ const ChatScreen = () => {
           <View
             style={[
               styles.messageContainer,
-              item.senderId === getAuth().currentUser?.uid ? styles.sentMessage : styles.receivedMessage,
+              item.senderId === getAuth().currentUser?.uid
+                ? styles.sentMessage
+                : styles.receivedMessage,
             ]}
           >
             <Text style={styles.messageText}>{item.text}</Text>
@@ -74,7 +77,6 @@ const ChatScreen = () => {
         )}
         keyExtractor={(item, index) => index.toString()}
         contentContainerStyle={styles.messagesList}
-      
       />
 
       <View style={styles.inputContainer}>
@@ -113,7 +115,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',
-    flex: 1
+    flex: 1,
   },
   messagesList: {
     padding: 10,
